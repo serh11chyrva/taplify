@@ -87,6 +87,10 @@ pnpm dlx shadcn@latest add input card
 
 ## Checks
 
+GitHub Actions runs CI on every push and pull request; it can also be started manually from the Actions tab. Lint, type checking, unit tests, and production browser tests report separate statuses, so a lint failure does not prevent tests from running. For a push containing multiple commits, CI checks the latest commit.
+
+Failed checks appear on the commit and in the Actions tab after the push has been accepted. The workflow does not reject pushes or configure branch protection. To keep merging optional when checks fail, leave these checks out of required status checks in the repository's branch protection or rulesets.
+
 ```sh
 pnpm lint
 pnpm typecheck
