@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-13 -33 202 202">
+  <style>
+    @media (prefers-color-scheme: dark) {
+      path {
+        fill: #000;
+        stroke: #fff;
+      }
+    }
+  </style>
+  <path
+    d="M144 18 105 72 140 84 101 98 93 136 72 104 28 126 50 92 18 76 59 68 68 36 86 63Z"
+    fill="#fff"
+    stroke="#000"
+    stroke-width="16"
+    stroke-linejoin="miter"
+    stroke-miterlimit="8"
+    paint-order="stroke"
+  />
+</svg>
