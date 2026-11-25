@@ -13,13 +13,13 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
   await expect(products).toHaveCSS("text-decoration-line", "underline");
   await expect(products).toHaveAttribute("aria-expanded", "true");
   await expect(nav.getByRole("link")).toHaveText([
-    "Taplify Notes*", "Taplify Store*", "Taplify AI*", "Taplify CMS",
+    "Taplify Commercial*", "Taplify Analytics*", "Taplify AI*",
   ]);
-  const notes = nav.getByRole("link", { name: "Taplify Notes*" });
-  await notes.hover();
-  await expect(notes).toHaveCSS("text-decoration-line", "underline");
-  await expect(notes).toBeDisabled();
-  await expect(notes).not.toHaveAttribute("href");
+  const commercial = nav.getByRole("link", { name: "Taplify Commercial*" });
+  await commercial.hover();
+  await expect(commercial).toHaveCSS("text-decoration-line", "underline");
+  await expect(commercial).toBeDisabled();
+  await expect(commercial).not.toHaveAttribute("href");
   await page.keyboard.press("Escape");
   await expect(products).toHaveAttribute("aria-expanded", "false");
   await products.focus();
@@ -38,7 +38,7 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
   await expect(footer.getByRole("heading")).toHaveText(["Taplify", "Products", "Developers", "Legal"]);
   await expect(footer.getByRole("listitem")).toHaveText([
     "Templates**", "About**", "Support**", "FAQ & Guides**", "Status**",
-    "Taplify Notes*", "Taplify Store*", "Taplify AI*", "Taplify CMS",
+    "Taplify Commercial*", "Taplify Analytics*", "Taplify AI*",
     "GitHub**", "Documentation**", "API**", "Integrations**", "Webhooks**",
     "Terms of Service**", "Privacy Policy**", "Cookie Policy**", "Licenses**", "Company Information**",
   ]);

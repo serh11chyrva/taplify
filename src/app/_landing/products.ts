@@ -1,6 +1,5 @@
 export const productLinks = [
-  { label: "Taplify Notes", marker: "*" },
-  { label: "Taplify Store", marker: "*" },
+  { label: "Taplify Commercial", marker: "*" },
+  { label: "Taplify Analytics", marker: "*" },
   { label: "Taplify AI", marker: "*" },
-  { label: "Taplify CMS", marker: "" },
 ];
