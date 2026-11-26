@@ -39,9 +39,21 @@ jobs:
         run: pnpm run ${{ matrix.command }}
 
   e2e:
-    name: Browser tests
+    name: Browser tests (${{ matrix.analytics }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - analytics: GA4 disabled
+            measurement_id: ""
+            spec: ""
+          - analytics: GA4 enabled
+            measurement_id: G-TAPLIFY123
+            spec: tests/e2e/cookie-consent.spec.ts
+    env:
+      NEXT_PUBLIC_GA4_MEASUREMENT_ID: ${{ matrix.measurement_id }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -59,4 +71,4 @@ jobs:
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
       - name: Run browser tests
-        run: pnpm test:e2e
+        run: pnpm test:e2e ${{ matrix.spec }}
