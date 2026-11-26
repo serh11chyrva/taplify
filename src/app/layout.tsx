@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { CookieConsentProvider } from "@/components/cookies/cookie-consent-provider";
 import { ga4MeasurementId } from "@/lib/cookie-consent";
+import { getSiteTheme } from "@/server/site-preferences";
 import "./globals.css";
 
 const geist = localFont({
@@ -18,9 +19,11 @@ export const metadata: Metadata = {
 
 export const runtime = "nodejs";
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const theme = await getSiteTheme();
+
   return (
-    <html lang="en" className={geist.variable}>
+    <html lang="en" className={geist.variable} data-theme={theme}>
       <body>
         <CookieConsentProvider measurementId={ga4MeasurementId}>{children}</CookieConsentProvider>
       </body>

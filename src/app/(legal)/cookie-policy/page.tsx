@@ -14,8 +14,8 @@ export default function CookiePolicyPage() {
   return (
     <>
       <h1>Cookie Policy</h1>
-      <p className={styles.updated}>Last updated <time dateTime="2026-11-26">November 26, 2026</time></p>
-      <p>Taplify uses cookies and browser storage to provide sign-in and remember your cookie preferences.</p>
+      <p className={styles.updated}>Last updated <time dateTime="2026-11-27">November 27, 2026</time></p>
+      <p>Taplify uses cookies and browser storage to provide sign-in and remember your preferences.</p>
 
       <section>
         <h2>Necessary cookies and storage</h2>
@@ -31,6 +31,10 @@ export default function CookiePolicyPage() {
           <div>
             <dt>Cookie preferences</dt>
             <dd>Taplify stores your choices in your browser&apos;s local storage. Your choices expire after {COOKIE_CONSENT_DAYS} days.</dd>
+          </div>
+          <div>
+            <dt><code>taplify-theme</code></dt>
+            <dd>Taplify uses this cookie to remember your theme choice for up to one year.</dd>
           </div>
         </dl>
         <p>Taplify adds the <code>__Secure-</code> prefix to the Better Auth cookie names on HTTPS.</p>

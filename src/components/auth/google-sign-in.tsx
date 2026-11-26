@@ -29,7 +29,7 @@ export function GoogleSignIn({ enabled }: { enabled: boolean }) {
         {pending ? "Connecting…" : "Continue with Google"}
       </Button>
       {!enabled && <p className="text-sm text-muted-foreground">Sign-in is not available yet. Please check back soon.</p>}
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
     </div>
   );
 }

@@ -1,11 +1,14 @@
 .page {
-  --landing-background: #101012;
-  --landing-surface: #18171c;
-  --landing-text: #f8f7fb;
-  --landing-muted: #bdbac5;
-  --landing-accent: #d400ff;
-  --landing-accent-light: color-mix(in srgb, var(--landing-accent) 33%, white);
-  --landing-divider: #302d35;
+  --landing-background: light-dark(#fff, #101012);
+  --landing-surface: var(--surface);
+  --landing-text: var(--foreground);
+  --landing-muted: var(--muted-foreground);
+  --landing-accent: light-dark(#8606ac, #d400ff);
+  --landing-accent-light: light-dark(#751098, color-mix(in srgb, var(--landing-accent) 33%, white));
+  --landing-divider: light-dark(#e5ddea, #302d35);
+  --landing-control-border: light-dark(#a293ad, #686471);
+  --landing-shadow: light-dark(rgb(65 37 82 / 14%), rgb(0 0 0 / 35%));
+  --landing-insights-border: light-dark(#d8c9e3, #43384d);
   --landing-gutter: clamp(1rem, 5.5vw, 5rem);
   --landing-header-height: 4.75rem;
 
@@ -46,7 +49,7 @@
   font-size: 1.375rem;
   line-height: 1;
   letter-spacing: -0.055em;
-  text-shadow: 0 1px 8px #101012;
+  text-shadow: 0 1px 8px var(--landing-background);
 }
 
 .brandIcon {
@@ -67,7 +70,7 @@
   color: var(--landing-muted);
   font-size: 0.875rem;
   font-weight: 550;
-  text-shadow: 0 1px 8px #101012;
+  text-shadow: 0 1px 8px var(--landing-background);
 }
 
 .headerLink:hover,
@@ -101,8 +104,8 @@ button.footerLink:is(:hover, :focus-visible) {
   padding: 0.35rem;
   border: 1px solid var(--landing-divider);
   border-radius: 0.65rem;
-  background: #161419;
-  box-shadow: 0 0.6rem 1.5rem rgb(0 0 0 / 35%);
+  background: var(--landing-surface);
+  box-shadow: 0 0.6rem 1.5rem var(--landing-shadow);
 }
 
 .productLink {
@@ -114,22 +117,22 @@ button.footerLink:is(:hover, :focus-visible) {
 }
 
 .productLink:hover {
-  background: #211c25;
+  background: var(--muted);
 }
 
 .signIn {
   min-block-size: 2.75rem;
   justify-self: end;
   padding-inline: 1.15rem;
-  border-color: #686471;
+  border-color: var(--landing-control-border);
   background: transparent;
   color: var(--landing-text);
-  text-shadow: 0 1px 8px #101012;
+  text-shadow: 0 1px 8px var(--landing-background);
 }
 
 .signIn:hover {
   border-color: var(--landing-muted);
-  background: rgb(16 16 18 / 52%);
+  background: color-mix(in srgb, var(--landing-background) 52%, transparent);
 }
 
 .brand:focus-visible,
@@ -137,7 +140,8 @@ button.footerLink:is(:hover, :focus-visible) {
 .productLink:focus-visible,
 .signIn:focus-visible,
 .cta:focus-visible,
-.footerLink:focus-visible {
+.footerLink:focus-visible,
+.preferenceSelect:focus-visible {
   outline: 2px solid var(--landing-accent);
   outline-offset: 4px;
   box-shadow: none;
@@ -161,14 +165,28 @@ button.footerLink:is(:hover, :focus-visible) {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 15% 65%, #454545, transparent 62%),
-    radial-gradient(ellipse at 86% 28%, #424242, #1c1c1c 84%);
+    radial-gradient(ellipse at 15% 65%, light-dark(#eee1f5, #454545), transparent 62%),
+    radial-gradient(ellipse at 86% 28%, light-dark(#ece4f1, #424242), light-dark(#faf8fc, #1c1c1c) 84%);
+}
+
+:global([data-theme="light"]) .heroBackdrop {
+  --landing-dither-filter: invert(1) opacity(0.55);
+}
+
+@media (prefers-color-scheme: light) {
+  :global([data-theme="system"]) .heroBackdrop {
+    --landing-dither-filter: invert(1) opacity(0.55);
+  }
+}
+
+.heroBackdrop canvas {
+  filter: var(--landing-dither-filter, none);
 }
 
 .heroBackdrop::before {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle, #101010 0.65px, transparent 0.95px) center / 3px 3px;
+  background: radial-gradient(circle, light-dark(#d2c5da, #101010) 0.65px, transparent 0.95px) center / 3px 3px;
   opacity: 0.78;
   content: "";
 }
@@ -177,8 +195,8 @@ button.footerLink:is(:hover, :focus-visible) {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to bottom, rgb(16 16 18 / 78%) 10%, transparent 27% 78%, var(--landing-background)),
-    radial-gradient(ellipse at 50% 54%, rgb(16 16 18 / 80%) 35%, rgb(16 16 18 / 54%) 63%, transparent 92%);
+    linear-gradient(to bottom, color-mix(in srgb, var(--landing-background) 78%, transparent) 10%, transparent 27% 78%, var(--landing-background)),
+    radial-gradient(ellipse at 50% 54%, color-mix(in srgb, var(--landing-background) 80%, transparent) 35%, color-mix(in srgb, var(--landing-background) 54%, transparent) 63%, transparent 92%);
   content: "";
 }
 
@@ -197,7 +215,7 @@ button.footerLink:is(:hover, :focus-visible) {
 .description {
   max-inline-size: 34rem;
   margin: clamp(1.4rem, 3.2vw, 2.15rem) auto 0;
-  color: #dedbe5;
+  color: light-dark(#43394b, #dedbe5);
   font-size: clamp(1rem, 1.65vw, 1.1875rem);
   line-height: 1.6;
   text-wrap: pretty;
@@ -261,7 +279,7 @@ button.footerLink:is(:hover, :focus-visible) {
 .exampleCard {
   --example-paper: #e5d8ff;
   --example-ink: #27184a;
-  --example-halo: #503d74;
+  --example-halo: light-dark(#ddd0f1, #503d74);
 
   overflow: hidden;
   border: 1px solid var(--landing-divider);
@@ -272,13 +290,13 @@ button.footerLink:is(:hover, :focus-visible) {
 .exampleCard[data-page-kind="company"] {
   --example-paper: #d9ebdf;
   --example-ink: #19362b;
-  --example-halo: #35564b;
+  --example-halo: light-dark(#d3e4d9, #35564b);
 }
 
 .exampleCard[data-page-kind="product"] {
   --example-paper: #f3e1cf;
   --example-ink: #512f1b;
-  --example-halo: #654534;
+  --example-halo: light-dark(#f0ddcf, #654534);
 }
 
 .exampleStage {
@@ -298,7 +316,7 @@ button.footerLink:is(:hover, :focus-visible) {
   border-radius: 0.85rem 0.85rem 0 0;
   background: var(--example-paper);
   color: var(--example-ink);
-  box-shadow: 0 0.75rem 2.75rem rgb(0 0 0 / 36%);
+  box-shadow: 0 0.75rem 2.75rem var(--landing-shadow);
   text-align: center;
 }
 
@@ -404,9 +422,9 @@ button.footerLink:is(:hover, :focus-visible) {
   display: grid;
   gap: 1rem;
   padding: clamp(0.95rem, 3vw, 1.65rem);
-  border: 1px solid #43384d;
+  border: 1px solid var(--landing-insights-border);
   border-radius: 1rem;
-  background: linear-gradient(157deg, #211b28, #16151a 63%);
+  background: linear-gradient(157deg, light-dark(#f1e9f6, #211b28), light-dark(#faf7fc, #16151a) 63%);
 }
 
 .insightsPreview figcaption {
@@ -436,7 +454,7 @@ button.footerLink:is(:hover, :focus-visible) {
   padding: 0.65rem clamp(0.45rem, 1.4vw, 0.9rem);
   border: 1px solid var(--landing-divider);
   border-radius: 0.55rem;
-  background: #17151b;
+  background: var(--landing-surface);
 }
 
 .metrics dd {
@@ -452,8 +470,8 @@ button.footerLink:is(:hover, :focus-visible) {
   grid-template-columns: repeat(14, minmax(0, 1fr));
   align-items: end;
   gap: clamp(0.2rem, 0.8vw, 0.5rem);
-  border-block-end: 1px solid #43384d;
-  background: repeating-linear-gradient(to top, transparent 0 calc(25% - 1px), #302737 calc(25% - 1px) 25%);
+  border-block-end: 1px solid var(--landing-insights-border);
+  background: repeating-linear-gradient(to top, transparent 0 calc(25% - 1px), var(--landing-divider) calc(25% - 1px) 25%);
 }
 
 .activity span {
@@ -467,7 +485,7 @@ button.footerLink:is(:hover, :focus-visible) {
 
 .footer {
   padding-block: clamp(2.4rem, 6vw, 4.5rem) 1.8rem;
-  background: #000000;
+  background: light-dark(#f8f6fb, #000000);
 }
 
 .footerColumns {
@@ -535,14 +553,90 @@ button.footerLink {
   font-size: 0.8125rem;
 }
 
-.copyright {
+.footerBottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) fit-content(62%);
+  align-items: center;
+  gap: 0.75rem;
   margin-block-start: 1rem;
+}
+
+.copyright {
   color: var(--landing-muted);
   font-size: 0.8125rem;
 }
 
 .copyright .footerLink {
   color: var(--landing-text);
+}
+
+.footerPreferences {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.preference {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.preferenceControl {
+  position: relative;
+}
+
+.preferenceSelect {
+  appearance: none;
+  inline-size: 100%;
+  min-block-size: 2.75rem;
+  padding-inline: 1.95rem 1.65rem;
+  border: 1px solid var(--landing-control-border);
+  border-radius: 0.55rem;
+  background: var(--landing-surface);
+  color: var(--landing-text);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 550;
+}
+
+.preferenceSelect:hover {
+  border-color: var(--landing-accent);
+}
+
+.preferenceIcon,
+.preferenceChevron {
+  position: absolute;
+  inset-block: 0;
+  margin-block: auto;
+  pointer-events: none;
+  color: var(--landing-muted);
+}
+
+.preferenceIcon {
+  inset-inline-start: 0.65rem;
+  inline-size: 0.9rem;
+  block-size: 0.9rem;
+}
+
+.preferenceIcon svg {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.preferenceChevron {
+  inset-inline-end: 0.55rem;
+  inline-size: 0.85rem;
+  block-size: 0.85rem;
+}
+
+.preferenceError {
+  max-inline-size: 10rem;
+  margin-block-start: 0.35rem;
+  color: var(--danger);
+  font-size: 0.8125rem;
 }
 
 @media (width <= 48rem) {

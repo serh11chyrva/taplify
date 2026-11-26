@@ -24,5 +24,5 @@ export function SignOut() {
     }
   }
 
-  return <div><Button variant="outline" size="sm" onClick={signOut} disabled={pending}>Sign out</Button>{error && <p role="alert" className="mt-2 text-sm text-red-700">Please try again.</p>}</div>;
+  return <div><Button variant="outline" size="sm" onClick={signOut} disabled={pending}>Sign out</Button>{error && <p role="alert" className="mt-2 text-sm text-danger">Please try again.</p>}</div>;
 }

@@ -4,6 +4,7 @@
 @theme inline {
   --font-sans: var(--font-geist), system-ui, sans-serif;
   --color-background: var(--background);
+  --color-surface: var(--surface);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
@@ -12,21 +13,28 @@
   --color-border: var(--border);
   --color-input: var(--border);
   --color-ring: var(--primary);
+  --color-danger: var(--danger);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
 }
 
 :root {
-  --background: oklch(0.985 0.005 250);
-  --foreground: oklch(0.22 0.025 260);
-  --primary: oklch(0.5 0.2 265);
-  --primary-foreground: oklch(0.99 0 0);
-  --muted: oklch(0.95 0.01 250);
-  --muted-foreground: oklch(0.48 0.025 260);
-  --border: oklch(0.89 0.015 250);
+  color-scheme: light dark;
+  --background: light-dark(oklch(0.985 0.005 250), #101012);
+  --surface: light-dark(#fff, #18171c);
+  --foreground: light-dark(oklch(0.22 0.025 260), #f8f7fb);
+  --primary: light-dark(oklch(0.5 0.2 265), #c6b7ff);
+  --primary-foreground: light-dark(oklch(0.99 0 0), #1d1237);
+  --muted: light-dark(oklch(0.95 0.01 250), #25222b);
+  --muted-foreground: light-dark(oklch(0.48 0.025 260), #bdbac5);
+  --border: light-dark(oklch(0.89 0.015 250), #49434f);
+  --danger: light-dark(#a31d2b, #ff9da7);
   --radius: 0.75rem;
 }
+
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
 
 @layer base {
   * { @apply border-border; }

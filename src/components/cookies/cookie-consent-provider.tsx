@@ -72,7 +72,7 @@ function CookieBanner({ analyticsAvailable, save }: {
               {analyticsAvailable && " With your permission, Google Analytics helps us understand how people use Taplify."}
               {" "}<Link className={styles.textAction} href={COOKIE_POLICY_PATH}>Cookie Policy</Link>
             </p>
-            {saveFailed && <p role="alert" className="mt-2 text-sm text-red-700">{SAVE_ERROR}</p>}
+            {saveFailed && <p role="alert" className="mt-2 text-sm text-danger">{SAVE_ERROR}</p>}
           </div>
           <div className={styles.bannerActions}>
             <ManageCookiesButton className={buttonVariants({ variant: "outline", className: styles.bannerManage })} />
@@ -152,7 +152,7 @@ function CookiePreferences({ analyticsAvailable, consent, save, onClose }: {
             </div>
           )}
         </div>
-        {saveFailed && <p role="alert" className="mt-3 text-sm text-red-700">{SAVE_ERROR}</p>}
+        {saveFailed && <p role="alert" className="mt-3 text-sm text-danger">{SAVE_ERROR}</p>}
         <div className="mt-5 flex flex-wrap justify-end gap-2">
           <Button type="button" variant="outline" onClick={() => dialog.current?.close()}>{analyticsAvailable ? "Cancel" : "Close"}</Button>
           {analyticsAvailable && <Button type="submit">Save preferences</Button>}

@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("opens the landing page and sign-in screen", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/One link\.\s*Your whole story\./);
   const nav = page.getByRole("navigation", { name: "Main" });

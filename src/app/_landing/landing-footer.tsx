@@ -1,8 +1,11 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, SunMoon } from "lucide-react";
 import Link from "next/link";
 import { ManageCookiesButton } from "@/components/cookies/cookie-consent-provider";
 import { COOKIE_POLICY_PATH } from "@/lib/cookie-consent";
+import { getSiteTheme } from "@/server/site-preferences";
 import styles from "../landing.module.css";
+import { saveTheme } from "./preference-actions";
+import { PreferenceSelect } from "./preference-select";
 import { productLinks } from "./products";
 import { ScrollReveal } from "./scroll-reveal";
 
@@ -75,7 +78,9 @@ function FooterLink({ label, marker, href, prefetch }: FooterLinkItem) {
   );
 }
 
-export function LandingFooter() {
+export async function LandingFooter() {
+  const theme = await getSiteTheme();
+
   return (
     <footer className={styles.footer}>
       <ScrollReveal className={[styles.container, styles.reveal].join(" ")}>
@@ -101,9 +106,24 @@ export function LandingFooter() {
           <p>* Starred products are shown for demonstration purposes.</p>
           <p>** These links are placeholders.</p>
         </div>
-        <p className={styles.copyright}>
-          © 2026 Taplify powered by <FooterLink label="Vercel" href="https://vercel.com/" />
-        </p>
+        <div className={styles.footerBottom}>
+          <p className={styles.copyright}>
+            © 2026 Taplify powered by <FooterLink label="Vercel" href="https://vercel.com/" />
+          </p>
+          <div className={styles.footerPreferences}>
+            <PreferenceSelect
+              label="Theme"
+              value={theme}
+              options={[
+                { value: "system", label: "System" },
+                { value: "dark", label: "Dark" },
+                { value: "light", label: "Light" },
+              ]}
+              icon={<SunMoon />}
+              saveAction={saveTheme}
+            />
+          </div>
+        </div>
       </ScrollReveal>
     </footer>
   );

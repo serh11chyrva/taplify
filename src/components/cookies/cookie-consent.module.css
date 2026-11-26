@@ -1,7 +1,7 @@
 .panel {
   border: 1px solid var(--border);
   border-radius: 1rem;
-  background: #fff;
+  background: var(--surface);
   color: var(--foreground);
   box-shadow: 0 12px 36px rgb(0 0 0 / 18%);
   overflow: auto;
@@ -17,7 +17,7 @@
   padding-block: 0.875rem calc(0.875rem + env(safe-area-inset-bottom));
   padding-inline: max(1rem, env(safe-area-inset-left)) max(1rem, env(safe-area-inset-right));
   border-block-start: 1px solid var(--border);
-  background: #fff;
+  background: var(--surface);
   color: var(--foreground);
   box-shadow: 0 -8px 32px rgb(0 0 0 / 16%);
 }
