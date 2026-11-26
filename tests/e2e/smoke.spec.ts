@@ -52,6 +52,14 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
   await expect(templates.locator("svg")).toHaveCSS("opacity", "0");
   await templates.hover();
   await expect(templates.locator("svg")).toHaveCSS("opacity", "1");
+  const arrowCenterOffset = await templates.evaluate((link) => {
+    const arrow = link.querySelector("svg");
+    if (!arrow) throw new Error("The footer link is missing its arrow.");
+    const linkBounds = link.getBoundingClientRect();
+    const arrowBounds = arrow.getBoundingClientRect();
+    return (arrowBounds.top + arrowBounds.bottom - linkBounds.top - linkBounds.bottom) / 2;
+  });
+  expect(Math.abs(arrowCenterOffset)).toBeLessThan(0.5);
   const vercel = footer.getByRole("link", { name: "Vercel" });
   await expect(vercel).toHaveAttribute("href", "https://vercel.com/");
   await expect(footer.getByText(/© 2026 Taplify powered by/)).toBeAttached();

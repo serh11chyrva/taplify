@@ -514,10 +514,11 @@ button.footerLink {
 
 .footerLinkIcon {
   position: absolute;
-  inset-block-start: 0.15em;
+  inset-block: 0;
   inset-inline-start: calc(100% + 0.125rem);
   inline-size: 0.8125rem;
   block-size: 0.8125rem;
+  margin-block: auto;
   pointer-events: none;
   opacity: 0;
 }
