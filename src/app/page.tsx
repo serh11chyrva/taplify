@@ -6,6 +6,7 @@ import { getSiteMessages } from "@/lib/i18n/messages";
 import { getSitePreferences } from "@/server/site-preferences";
 import { HeroDither } from "./_landing/hero-dither";
 import { LandingFooter } from "./_landing/landing-footer";
+import { LandingHeader } from "./_landing/landing-header";
 import { MarketingSections } from "./_landing/marketing-sections";
 import { ProductsMenu } from "./_landing/products-menu";
 import styles from "./landing.module.css";
@@ -34,7 +35,7 @@ export default async function HomePage() {
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
+      <LandingHeader>
         <div className={[styles.container, styles.headerInner].join(" ")}>
           <Link href="/" className={styles.brand}>
             <svg className={styles.brandIcon} viewBox="0 0 160 160" aria-hidden="true">
@@ -52,11 +53,16 @@ export default async function HomePage() {
               {landing.pricing}
             </button>
           </nav>
-          <Button asChild variant="outline" className={styles.signIn}>
-            <Link href="/login">{landing.signIn}</Link>
-          </Button>
+          <div className={styles.headerActions}>
+            <Button asChild variant="outline" className={styles.signIn}>
+              <Link href="/login">{landing.signIn}</Link>
+            </Button>
+            <Button asChild className={styles.signUp}>
+              <Link href="/login">{landing.signUp}</Link>
+            </Button>
+          </div>
         </div>
-      </header>
+      </LandingHeader>
       <main>
         <section className={styles.hero} aria-labelledby="landing-title">
           <div className={styles.heroBackdrop} aria-hidden="true">

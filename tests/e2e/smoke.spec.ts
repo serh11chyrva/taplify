@@ -4,6 +4,8 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/One link\.\s*Your whole story\./);
+  const header = page.getByRole("banner");
+  await expect(header).not.toHaveAttribute("data-scrolled", "");
   const nav = page.getByRole("navigation", { name: "Main" });
   const products = nav.getByRole("button", { name: "Products" });
   const pricing = nav.getByRole("button", { name: "Pricing" });
@@ -30,11 +32,17 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
   await expect(products).toHaveAttribute("aria-expanded", "false");
   await expect(products).toBeFocused();
 
-  await expect(page.getByRole("region", { name: "A page for whatever you do." })).toBeAttached();
+  const examples = page.getByRole("region", { name: "A page for whatever you do." });
+  const firstExample = examples.getByRole("article").first();
+  await expect(firstExample.locator("..")).toHaveAttribute("data-reveal", "pending");
+  await firstExample.scrollIntoViewIfNeeded();
+  await expect(firstExample.locator("..")).toHaveAttribute("data-reveal", "shown");
   await expect(page.getByRole("region", { name: "From draft to one shareable link." })).toBeAttached();
   await expect(page.getByRole("region", { name: "Give every visit a next step." })).toBeAttached();
 
   const footer = page.getByRole("contentinfo");
+  await footer.scrollIntoViewIfNeeded();
+  await expect(header).toHaveCSS("backdrop-filter", /blur\(/);
   await expect(footer).toHaveCSS("background-color", "rgb(0, 0, 0)");
   await expect(footer.getByRole("heading")).toHaveText(["Taplify", "Products", "Developers", "Legal", "Cookie"]);
   await expect(footer.getByRole("listitem")).toHaveText([
@@ -69,7 +77,7 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
   await vercel.hover();
   await expect(vercel).toHaveCSS("text-decoration-line", "underline");
 
-  for (const name of ["Sign in", "Create your first page"]) {
+  for (const name of ["Sign In", "Sign Up", "Create your first page"]) {
     await page.getByRole("link", { name, exact: true }).click();
     await expect(page).toHaveURL(/\/login$/);
     await expect(page.getByRole("button", { name: "Continue with Google" })).toBeVisible();

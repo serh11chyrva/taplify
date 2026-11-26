@@ -85,7 +85,7 @@ export async function LandingFooter() {
 
   return (
     <footer className={styles.footer}>
-      <ScrollReveal className={[styles.container, styles.reveal].join(" ")}>
+      <ScrollReveal className={styles.container}>
         <div className={styles.footerColumns}>
           {footerColumns.map((column) => (
             <div className={styles.footerColumn} key={column[0].title}>

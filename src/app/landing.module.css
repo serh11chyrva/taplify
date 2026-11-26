@@ -30,6 +30,13 @@
   block-size: var(--landing-header-height);
 }
 
+.header[data-scrolled] {
+  background-color: color-mix(in srgb, var(--landing-background) 79%, transparent);
+  box-shadow: 0 1px 0 var(--landing-divider);
+  -webkit-backdrop-filter: blur(16px) saturate(135%);
+  backdrop-filter: blur(16px) saturate(135%);
+}
+
 .headerInner {
   display: grid;
   block-size: 100%;
@@ -120,10 +127,20 @@ button.footerLink:is(:hover, :focus-visible) {
   background: var(--muted);
 }
 
-.signIn {
-  min-block-size: 2.75rem;
+.headerActions {
+  display: flex;
+  align-items: center;
   justify-self: end;
+  gap: 0.5rem;
+}
+
+.signIn,
+.signUp {
+  min-block-size: 2.75rem;
   padding-inline: 1.15rem;
+}
+
+.signIn {
   border-color: var(--landing-control-border);
   background: transparent;
   color: var(--landing-text);
@@ -135,10 +152,20 @@ button.footerLink:is(:hover, :focus-visible) {
   background: color-mix(in srgb, var(--landing-background) 52%, transparent);
 }
 
+.signUp {
+  background: var(--landing-accent);
+  color: light-dark(#fff, #160619);
+}
+
+.signUp:hover {
+  background: color-mix(in srgb, var(--landing-accent) 91%, var(--landing-text));
+}
+
 .brand:focus-visible,
 .headerLink:focus-visible,
 .productLink:focus-visible,
 .signIn:focus-visible,
+.signUp:focus-visible,
 .cta:focus-visible,
 .footerLink:focus-visible,
 .preferenceSelect:focus-visible {
@@ -286,6 +313,7 @@ button.footerLink:is(:hover, :focus-visible) {
   --example-ink: #27184a;
   --example-halo: light-dark(#ddd0f1, #503d74);
 
+  block-size: 100%;
   overflow: hidden;
   border: 1px solid var(--landing-divider);
   border-radius: 1rem;
@@ -650,6 +678,10 @@ button.footerLink {
     --landing-header-height: 4.25rem;
   }
 
+  .headerInner {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
   .brand {
     gap: 0.25rem;
     font-size: 1.25rem;
@@ -660,7 +692,8 @@ button.footerLink {
     block-size: 1.5rem;
   }
 
-  .signIn {
+  .signIn,
+  .signUp {
     padding-inline: 0.8rem;
   }
 
@@ -671,17 +704,38 @@ button.footerLink {
 }
 
 @media (width <= 33rem) {
+  .page {
+    --landing-header-height: 6rem;
+  }
+
   .headerInner {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: 0.4rem;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 0 0.5rem;
   }
 
-  .brand {
-    font-size: 1.125rem;
+  .headerNav {
+    grid-area: 2 / 1 / 3 / -1;
+    justify-content: flex-start;
+    gap: 1.2rem;
   }
 
-  .signIn {
-    padding-inline: 0.55rem;
+  .productsPopup {
+    inset-inline-start: 0;
+    transform: none;
+  }
+
+  .headerActions {
+    grid-area: 1 / 2;
+    gap: 0.35rem;
+  }
+
+  .signIn,
+  .signUp {
+    block-size: auto;
+    padding: 0.35rem 0.55rem;
+    text-align: center;
+    white-space: normal;
   }
 
   .footerColumns {
@@ -695,14 +749,6 @@ button.footerLink {
 }
 
 @media (width <= 22rem) {
-  .headerInner {
-    gap: 0.5rem;
-  }
-
-  .headerNav {
-    gap: 0.625rem;
-  }
-
   .brand {
     font-size: 1rem;
   }
@@ -711,12 +757,25 @@ button.footerLink {
     inline-size: 1.375rem;
     block-size: 1.375rem;
   }
+
+  .signIn,
+  .signUp {
+    padding-inline: 0.45rem;
+    font-size: 0.8125rem;
+  }
 }
 
-@media (scripting: enabled) {
-  .heroContent,
+@media (prefers-reduced-motion: no-preference) {
+  .header {
+    transition: background-color 180ms ease, box-shadow 180ms ease;
+  }
+
   .reveal[data-reveal="shown"] {
-    animation: reveal var(--landing-reveal-duration, 520ms) cubic-bezier(0.2, 0.65, 0.3, 1);
+    animation: reveal 520ms cubic-bezier(0.2, 0.65, 0.3, 1) var(--landing-reveal-delay, 0ms) backwards;
+  }
+
+  .reveal[data-reveal="pending"]:not(:focus-within) {
+    opacity: 0;
   }
 
   .heroContent:focus-within,
@@ -724,17 +783,30 @@ button.footerLink {
     --reveal-opacity: 1;
     --reveal-offset: 0px;
   }
-}
 
-@media (prefers-reduced-motion: no-preference) {
-  .reveal[data-reveal="pending"]:not(:focus-within) {
-    opacity: 0;
+  @media (scripting: enabled) {
+    .heroContent > * {
+      animation: reveal 520ms cubic-bezier(0.2, 0.65, 0.3, 1) var(--landing-reveal-delay, 0ms) backwards;
+    }
+
+    .heroContent > .description {
+      --landing-reveal-delay: 80ms;
+    }
+
+    .heroContent > .cta {
+      --landing-reveal-delay: 160ms;
+    }
   }
-}
 
-@media (prefers-reduced-motion: reduce) {
-  .page {
-    --landing-reveal-duration: 0s;
+  @media (width > 48rem) {
+    .exampleGrid > :nth-child(2),
+    .split > .reveal:last-child {
+      --landing-reveal-delay: 80ms;
+    }
+
+    .exampleGrid > :nth-child(3) {
+      --landing-reveal-delay: 160ms;
+    }
   }
 }
 
