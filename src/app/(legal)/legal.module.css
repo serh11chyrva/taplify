@@ -1,0 +1,49 @@
+.content {
+  flex: 1;
+  inline-size: calc(100% - 2 * var(--landing-gutter));
+  max-inline-size: 48rem;
+  margin-inline: auto;
+  padding-block: clamp(2.5rem, 8vw, 6rem);
+  line-height: 1.7;
+}
+
+.content h1 {
+  margin-block: 1.5rem 0.75rem;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.045em;
+}
+
+.content h2 {
+  margin-block-end: 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.content section {
+  margin-block-start: 2rem;
+}
+
+.content p {
+  margin-block-start: 0.6rem;
+  color: var(--landing-muted);
+}
+
+.content a {
+  color: var(--landing-accent-light);
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.content a:focus-visible {
+  outline: 2px solid var(--landing-accent);
+  outline-offset: 4px;
+}
+
+.backLink,
+.updated {
+  font-size: 0.875rem;
+}

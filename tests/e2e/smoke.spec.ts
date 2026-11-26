@@ -40,7 +40,7 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
     "Templates**", "About**", "Support**", "FAQ & Guides**", "Status**",
     "Taplify Commercial*", "Taplify Analytics*", "Taplify AI*",
     "GitHub**", "Documentation**", "API**", "Integrations**", "Webhooks**",
-    "Terms of Service**", "Privacy Policy**", "Cookie Policy**", "Licenses**", "Company Information**",
+    "Terms of Service", "Privacy Policy", "Cookie Policy**", "Licenses**", "Company Information**",
   ]);
   await expect(footer.getByText("* Starred products are shown for demonstration purposes.")).toBeAttached();
   await expect(footer.getByText("** These links are placeholders.")).toBeAttached();
@@ -60,6 +60,25 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
     await expect(page).toHaveURL(/\/login$/);
     await expect(page.getByRole("button", { name: "Continue with Google" })).toBeVisible();
     await page.goBack();
+  }
+});
+
+test("opens public policy pages from the footer and by URL", async ({ page }) => {
+  for (const [title, path] of [
+    ["Terms of Service", "/terms-of-service"],
+    ["Privacy Policy", "/privacy-policy"],
+  ]) {
+    await page.goto("/");
+    const link = page.getByRole("contentinfo").getByRole("link", { name: title, exact: true });
+    await expect(link).toHaveAttribute("href", path);
+    await link.click();
+    await expect(page).toHaveURL(path);
+    await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
+
+    expect((await page.goto(path))?.ok()).toBe(true);
+    await expect(page.getByRole("link", { name: "serhiichyrva@hotmail.com", exact: true }))
+      .toHaveAttribute("href", "mailto:serhiichyrva@hotmail.com");
+    await expect(page.getByRole("link", { name: "Back to Taplify" })).toHaveAttribute("href", "/");
   }
 });
 

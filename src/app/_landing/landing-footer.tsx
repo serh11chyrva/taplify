@@ -1,13 +1,16 @@
 import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 import styles from "../landing.module.css";
 import { productLinks } from "./products";
 import { ScrollReveal } from "./scroll-reveal";
+
+type FooterLinkItem = { label: string; marker?: string; href?: string };
 
 function placeholders(labels: string[]) {
   return labels.map((label) => ({ label, marker: "**" }));
 }
 
-const footerColumns = [
+const footerColumns: { title: string; links: FooterLinkItem[] }[][] = [
   [
     { title: "Taplify", links: placeholders(["Templates", "About", "Support", "FAQ & Guides", "Status"]) },
     { title: "Products", links: productLinks },
@@ -18,11 +21,26 @@ const footerColumns = [
   }],
   [{
     title: "Legal",
-    links: placeholders(["Terms of Service", "Privacy Policy", "Cookie Policy", "Licenses", "Company Information"]),
+    links: [
+      { label: "Terms of Service", href: "/terms-of-service" },
+      { label: "Privacy Policy", href: "/privacy-policy" },
+      ...placeholders(["Cookie Policy", "Licenses", "Company Information"]),
+    ],
   }],
 ];
 
-function FooterLink({ label, marker, href }: { label: string; marker?: string; href?: string }) {
+function FooterLink({ label, marker, href }: FooterLinkItem) {
+  const content = (
+    <>
+      {label}{marker && <sup>{marker}</sup>}
+      <ArrowUpRight className={styles.footerLinkIcon} aria-hidden="true" />
+    </>
+  );
+
+  if (href?.startsWith("/")) {
+    return <Link className={styles.footerLink} href={href}>{content}</Link>;
+  }
+
   return (
     <a
       className={styles.footerLink}
@@ -30,8 +48,7 @@ function FooterLink({ label, marker, href }: { label: string; marker?: string; h
       role={href ? undefined : "link"}
       aria-disabled={href ? undefined : true}
     >
-      {label}{marker && <sup>{marker}</sup>}
-      <ArrowUpRight className={styles.footerLinkIcon} aria-hidden="true" />
+      {content}
     </a>
   );
 }
@@ -47,8 +64,8 @@ export function LandingFooter() {
                 <div key={title}>
                   <h2>{title}</h2>
                   <ul role="list">
-                    {links.map(({ label, marker }) => (
-                      <li key={label}><FooterLink label={label} marker={marker} /></li>
+                    {links.map((link) => (
+                      <li key={link.label}><FooterLink {...link} /></li>
                     ))}
                   </ul>
                 </div>
