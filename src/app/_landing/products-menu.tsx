@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import styles from "../landing.module.css";
 import { productLinks } from "./products";
 
-export function ProductsMenu() {
+export function ProductsMenu({ label }: { label: string }) {
   const [open, setOpen] = useState(false);
   const menu = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -55,7 +55,7 @@ export function ProductsMenu() {
         aria-expanded={open}
         onClick={() => setOpen((expanded) => !expanded)}
       >
-        Products
+        {label}
       </button>
       <div className={styles.productsPopup} id={popupId} hidden={!open}>
         <ul className={styles.productsList} role="list">

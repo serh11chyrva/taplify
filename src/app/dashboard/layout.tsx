@@ -12,7 +12,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!session) redirect("/login");
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-8">
+    <div lang="en" className="mx-auto max-w-5xl px-6 py-8">
       <header className="flex items-center justify-between gap-4 border-b pb-6">
         <Link href="/dashboard" className="text-xl font-bold">taplify<span className="text-primary">.</span></Link>
         <SignOut />

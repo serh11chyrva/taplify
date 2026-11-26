@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div lang="en" className="flex min-h-dvh flex-col">
       <main className="flex flex-1 items-center justify-center px-6 py-12">
         <section className="w-full max-w-sm rounded-xl border bg-surface p-8 shadow-sm">
           <Link href="/" className="text-lg font-bold">taplify<span className="text-primary">.</span></Link>

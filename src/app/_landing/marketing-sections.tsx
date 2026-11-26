@@ -1,68 +1,60 @@
+import type { SiteMessages } from "@/lib/i18n/en";
 import styles from "../landing.module.css";
 import { ScrollReveal } from "./scroll-reveal";
-
-const pageTypes = [
-  {
-    kind: "personal",
-    title: "Personal",
-    description: "Show your work, gather your links, and give collaborators a way to reach you.",
-    example: "Jamie Park",
-    subtitle: "Independent designer",
-    initials: "JP",
-    items: ["Selected projects", "Get in touch"],
-  },
-  {
-    kind: "company",
-    title: "Company",
-    description: "Introduce your team, highlight your services, and collect inquiries on one page.",
-    example: "Northline Studio",
-    subtitle: "Design and strategy",
-    initials: "NS",
-    items: ["Explore our services", "Request a quote"],
-  },
-  {
-    kind: "product",
-    title: "Product",
-    description: "Give a product its own spotlight with a gallery, details, and a place to ask questions.",
-    example: "Fold Desk Lamp",
-    subtitle: "Lighting collection",
-    initials: "FL",
-    items: ["View the collection", "Ask about this item"],
-  },
-];
-
-const steps = [
-  {
-    title: "Choose a starting point",
-    description: "Pick a personal, company, or product page and give it a name.",
-  },
-  {
-    title: "Make it yours",
-    description: "Add links, images, a gallery, or a contact form. Customize the theme and preview your draft.",
-  },
-  {
-    title: "Publish and share",
-    description: "Publish to your own Taplify link, then share it in your bio, emails, or anywhere people find you.",
-  },
-];
-
-const sampleMetrics = [
-  { label: "Page views", value: "248" },
-  { label: "Link clicks", value: "86" },
-  { label: "Inquiries", value: "12" },
-];
 
 const sampleActivity = [24, 38, 31, 44, 51, 36, 48, 62, 53, 67, 61, 74, 69, 88];
 const sectionContent = [styles.container, styles.reveal].join(" ");
 
-export function MarketingSections() {
+export function MarketingSections({ copy }: { copy: SiteMessages["landing"] }) {
+  const pageTypes = [
+    {
+      kind: "personal",
+      title: copy.personalTitle,
+      description: copy.personalDescription,
+      example: "Jamie Park",
+      subtitle: copy.personalRole,
+      initials: "JP",
+      items: [copy.personalProjects, copy.personalContact],
+    },
+    {
+      kind: "company",
+      title: copy.companyTitle,
+      description: copy.companyDescription,
+      example: "Northline Studio",
+      subtitle: copy.companyRole,
+      initials: "NS",
+      items: [copy.companyServices, copy.companyQuote],
+    },
+    {
+      kind: "product",
+      title: copy.productTitle,
+      description: copy.productDescription,
+      example: copy.productExample,
+      subtitle: copy.productRole,
+      initials: "FL",
+      items: [copy.productCollection, copy.productInquiry],
+    },
+  ];
+
+  const steps = [
+    { id: "start", title: copy.startTitle, description: copy.startDescription },
+    { id: "customize", title: copy.customizeTitle, description: copy.customizeDescription },
+    { id: "publish", title: copy.publishTitle, description: copy.publishDescription },
+  ];
+
+  const sampleMetrics = [
+    { label: copy.pageViews, value: "248" },
+    { label: copy.linkClicks, value: "86" },
+    { label: copy.inquiries, value: "12" },
+  ];
+
   return (
     <>
       <section className={styles.section} aria-labelledby="examples-title">
         <ScrollReveal className={sectionContent}>
           <div className={styles.sectionHeading}>
-            <h2 id="examples-title">A page for whatever you do.</h2>
-            <p>Start with a layout that fits what you want to share.</p>
+            <h2 id="examples-title">{copy.examplesTitle}</h2>
+            <p>{copy.examplesDescription}</p>
           </div>
           <div className={styles.exampleGrid}>
             {pageTypes.map(({ kind, title, description, example, subtitle, initials, items }) => (
@@ -90,12 +82,12 @@ export function MarketingSections() {
       <section className={styles.section} aria-labelledby="workflow-title">
         <ScrollReveal className={[sectionContent, styles.split].join(" ")}>
           <div className={styles.sectionHeading}>
-            <h2 id="workflow-title">From draft to one shareable link.</h2>
-            <p>Build in a draft and publish when the page is ready for visitors.</p>
+            <h2 id="workflow-title">{copy.workflowTitle}</h2>
+            <p>{copy.workflowDescription}</p>
           </div>
           <ol className={styles.steps} role="list">
-            {steps.map(({ title, description }, index) => (
-              <li key={title}>
+            {steps.map(({ id, title, description }, index) => (
+              <li key={id}>
                 <span className={styles.stepNumber} aria-hidden="true">{index + 1}</span>
                 <div>
                   <h3>{title}</h3>
@@ -111,25 +103,25 @@ export function MarketingSections() {
         <ScrollReveal className={[sectionContent, styles.split].join(" ")}>
           <div className={styles.insightsCopy}>
             <div className={styles.sectionHeading}>
-              <h2 id="inquiries-title">Give every visit a next step.</h2>
+              <h2 id="inquiries-title">{copy.insightsTitle}</h2>
             </div>
             <div className={styles.feature}>
-              <h3>Collect inquiries</h3>
-              <p>Add a contact form with your own fields and manage submissions in a lead inbox for each page.</p>
+              <h3>{copy.inquiriesTitle}</h3>
+              <p>{copy.inquiriesDescription}</p>
             </div>
             <div className={styles.feature}>
-              <h3>See what people do</h3>
-              <p>Track page views, link clicks, and form submissions to see what brings visitors and what they respond to.</p>
+              <h3>{copy.analyticsTitle}</h3>
+              <p>{copy.analyticsDescription}</p>
             </div>
           </div>
           <figure className={styles.insightsPreview}>
             <figcaption>
-              <strong>Page insights</strong>
-              <span>Sample data</span>
+              <strong>{copy.pageInsights}</strong>
+              <span>{copy.sampleData}</span>
             </figcaption>
             <dl className={styles.metrics}>
               {sampleMetrics.map(({ label, value }) => (
-                <div key={label}>
+                <div key={value}>
                   <dt>{label}</dt>
                   <dd>{value}</dd>
                 </div>

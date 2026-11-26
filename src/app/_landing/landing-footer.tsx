@@ -1,58 +1,22 @@
-import { ArrowUpRight, SunMoon } from "lucide-react";
+import { ArrowUpRight, Globe, SunMoon } from "lucide-react";
 import Link from "next/link";
 import { ManageCookiesButton } from "@/components/cookies/cookie-consent-provider";
 import { COOKIE_POLICY_PATH } from "@/lib/cookie-consent";
-import { getSiteTheme } from "@/server/site-preferences";
+import { getSiteMessages } from "@/lib/i18n/messages";
+import { locales, themes } from "@/lib/site-preferences";
+import { getSitePreferences } from "@/server/site-preferences";
 import styles from "../landing.module.css";
-import { saveTheme } from "./preference-actions";
+import { saveLanguage, saveTheme } from "./preference-actions";
 import { PreferenceSelect } from "./preference-select";
 import { productLinks } from "./products";
 import { ScrollReveal } from "./scroll-reveal";
 
 type FooterLinkItem = { label: string; marker?: string; href?: string; prefetch?: boolean };
-type FooterItem = FooterLinkItem | { label: "Manage Cookies"; manageCookies: true };
+type FooterItem = FooterLinkItem | { label: string; manageCookies: true };
 
 function placeholders(labels: string[]) {
   return labels.map((label) => ({ label, marker: "**" }));
 }
-
-const footerColumns: { title: string; links: FooterItem[] }[][] = [
-  [
-    {
-      title: "Taplify",
-      links: [
-        { label: "Home", href: "/" },
-        ...placeholders(["Templates", "About", "Support", "FAQ & Guides", "Status"]),
-      ],
-    },
-    { title: "Products", links: productLinks },
-  ],
-  [{
-    title: "Developers",
-    links: [
-      { label: "GitHub", href: "https://github.com/serh11chyrva/taplify" },
-      ...placeholders(["Documentation", "API", "Integrations", "Webhooks"]),
-    ],
-  }],
-  [
-    {
-      title: "Legal",
-      links: [
-        { label: "Terms of Service", href: "/terms-of-service" },
-        { label: "Privacy Policy", href: "/privacy-policy" },
-        { label: "Licenses", href: "/licenses", prefetch: false },
-        { label: "Company Information", marker: "**" },
-      ],
-    },
-    {
-      title: "Cookie",
-      links: [
-        { label: "Cookie Policy", href: COOKIE_POLICY_PATH },
-        { label: "Manage Cookies", manageCookies: true },
-      ],
-    },
-  ],
-];
 
 function FooterLink({ label, marker, href, prefetch }: FooterLinkItem) {
   const content = (
@@ -79,7 +43,45 @@ function FooterLink({ label, marker, href, prefetch }: FooterLinkItem) {
 }
 
 export async function LandingFooter() {
-  const theme = await getSiteTheme();
+  const { theme, language, locale } = await getSitePreferences();
+  const { landing, footer, cookies, preferences } = getSiteMessages(locale);
+  const footerColumns: { title: string; links: FooterItem[] }[][] = [
+    [
+      {
+        title: "Taplify",
+        links: [
+          { label: footer.home, href: "/" },
+          ...placeholders([footer.templates, footer.about, footer.support, footer.faqAndGuides, footer.status]),
+        ],
+      },
+      { title: landing.products, links: productLinks },
+    ],
+    [{
+      title: footer.developers,
+      links: [
+        { label: "GitHub", href: "https://github.com/serh11chyrva/taplify" },
+        ...placeholders([footer.documentation, "API", footer.integrations, footer.webhooks]),
+      ],
+    }],
+    [
+      {
+        title: footer.legal,
+        links: [
+          { label: footer.termsOfService, href: "/terms-of-service" },
+          { label: footer.privacyPolicy, href: "/privacy-policy" },
+          { label: footer.licenses, href: "/licenses", prefetch: false },
+          { label: footer.companyInformation, marker: "**" },
+        ],
+      },
+      {
+        title: footer.cookie,
+        links: [
+          { label: cookies.policy, href: COOKIE_POLICY_PATH },
+          { label: cookies.manage, manageCookies: true },
+        ],
+      },
+    ],
+  ];
 
   return (
     <footer className={styles.footer}>
@@ -93,7 +95,9 @@ export async function LandingFooter() {
                   <ul role="list">
                     {links.map((item) => (
                       <li key={item.label}>
-                        {"manageCookies" in item ? <ManageCookiesButton className={styles.footerLink} /> : <FooterLink {...item} />}
+                        {"manageCookies" in item ? (
+                          <ManageCookiesButton className={styles.footerLink} label={item.label} />
+                        ) : <FooterLink {...item} />}
                       </li>
                     ))}
                   </ul>
@@ -103,24 +107,32 @@ export async function LandingFooter() {
           ))}
         </div>
         <div className={styles.footerNotes}>
-          <p>* Starred products are shown for demonstration purposes.</p>
-          <p>** These links are placeholders.</p>
+          <p>* {footer.starredProducts}</p>
+          <p>** {footer.placeholderLinks}</p>
         </div>
         <div className={styles.footerBottom}>
           <p className={styles.copyright}>
-            © 2026 Taplify powered by <FooterLink label="Vercel" href="https://vercel.com/" />
+            © 2026 Taplify {footer.poweredBy} <FooterLink label="Vercel" href="https://vercel.com/" />
           </p>
           <div className={styles.footerPreferences}>
             <PreferenceSelect
-              label="Theme"
+              label={preferences.theme}
               value={theme}
-              options={[
-                { value: "system", label: "System" },
-                { value: "dark", label: "Dark" },
-                { value: "light", label: "Light" },
-              ]}
+              options={themes.map((value) => ({ value, label: preferences[value] }))}
               icon={<SunMoon />}
               saveAction={saveTheme}
+              errorMessage={preferences.saveError}
+            />
+            <PreferenceSelect
+              label={preferences.language}
+              value={language}
+              options={[
+                { value: "auto", label: preferences.automatic },
+                ...locales.map(({ value, label }) => ({ value, label, language: value })),
+              ]}
+              icon={<Globe />}
+              saveAction={saveLanguage}
+              errorMessage={preferences.saveError}
             />
           </div>
         </div>

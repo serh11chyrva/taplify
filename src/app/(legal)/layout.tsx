@@ -6,7 +6,7 @@ import styles from "./legal.module.css";
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className={`${landingStyles.page} flex flex-col`}>
-      <main className={styles.content}>
+      <main lang="en" className={styles.content}>
         <Link href="/" className={styles.backLink}>Back to Taplify</Link>
         {children}
       </main>

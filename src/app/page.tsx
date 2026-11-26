@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { getSiteMessages } from "@/lib/i18n/messages";
+import { getSitePreferences } from "@/server/site-preferences";
 import { HeroDither } from "./_landing/hero-dither";
 import { LandingFooter } from "./_landing/landing-footer";
 import { MarketingSections } from "./_landing/marketing-sections";
@@ -17,12 +19,19 @@ const geistMonoItalic = localFont({
   fallback: ["monospace"],
 });
 
-export const metadata: Metadata = {
-  title: { absolute: "Taplify | Build a microsite worth sharing" },
-  description: "Build a microsite for your portfolio, company, or products. Bring links, galleries, and a contact form together on one shareable page.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale } = await getSitePreferences();
+  const { landing } = getSiteMessages(locale);
+  return {
+    title: { absolute: landing.metadataTitle },
+    description: landing.metadataDescription,
+  };
+}
 
-export default function HomePage() {
+export default async function HomePage() {
+  const { locale } = await getSitePreferences();
+  const { landing } = getSiteMessages(locale);
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
@@ -37,14 +46,14 @@ export default function HomePage() {
             </svg>
             <span className={geistMonoItalic.className}>taplify</span>
           </Link>
-          <nav className={styles.headerNav} aria-label="Main">
-            <ProductsMenu />
+          <nav className={styles.headerNav} aria-label={landing.mainNavigation}>
+            <ProductsMenu label={landing.products} />
             <button type="button" className={styles.headerLink} disabled>
-              Pricing
+              {landing.pricing}
             </button>
           </nav>
           <Button asChild variant="outline" className={styles.signIn}>
-            <Link href="/login">Sign in</Link>
+            <Link href="/login">{landing.signIn}</Link>
           </Button>
         </div>
       </header>
@@ -54,17 +63,14 @@ export default function HomePage() {
             <HeroDither />
           </div>
           <div className={[styles.container, styles.heroContent].join(" ")}>
-            <h1 id="landing-title" className={styles.title}>One link.<br />Your whole story.</h1>
-            <p className={styles.description}>
-              Create a microsite for your portfolio, company, or products. Bring links, galleries,
-              and a contact form together on one page you can share anywhere.
-            </p>
+            <h1 id="landing-title" className={styles.title}>{landing.heroFirstLine}<br />{landing.heroSecondLine}</h1>
+            <p className={styles.description}>{landing.heroDescription}</p>
             <Button asChild variant="outline" size="lg" className={styles.cta}>
-              <Link href="/login">Create your first page</Link>
+              <Link href="/login">{landing.heroCta}</Link>
             </Button>
           </div>
         </section>
-        <MarketingSections />
+        <MarketingSections copy={landing} />
       </main>
       <LandingFooter />
     </div>

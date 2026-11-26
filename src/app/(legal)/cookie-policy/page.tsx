@@ -36,6 +36,10 @@ export default function CookiePolicyPage() {
             <dt><code>taplify-theme</code></dt>
             <dd>Taplify uses this cookie to remember your theme choice for up to one year.</dd>
           </div>
+          <div>
+            <dt><code>taplify-language</code></dt>
+            <dd>Taplify uses this cookie to remember your selected language for up to one year.</dd>
+          </div>
         </dl>
         <p>Taplify adds the <code>__Secure-</code> prefix to the Better Auth cookie names on HTTPS.</p>
       </section>

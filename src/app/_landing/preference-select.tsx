@@ -4,12 +4,13 @@ import { ChevronDown } from "lucide-react";
 import { useOptimistic, useState, useTransition, type ReactNode } from "react";
 import styles from "../landing.module.css";
 
-export function PreferenceSelect({ label, value, options, icon, saveAction }: {
+export function PreferenceSelect({ label, value, options, icon, saveAction, errorMessage }: {
   label: string;
   value: string;
-  options: readonly { value: string; label: string }[];
+  options: readonly { value: string; label: string; language?: string }[];
   icon: ReactNode;
   saveAction: (value: string) => Promise<void>;
+  errorMessage: string;
 }) {
   const [selected, setSelected] = useOptimistic(value);
   const [pending, startTransition] = useTransition();
@@ -21,6 +22,7 @@ export function PreferenceSelect({ label, value, options, icon, saveAction }: {
       setSelected(next);
       try {
         await saveAction(next);
+        setFailed(false);
       } catch {
         setFailed(true);
       }
@@ -38,11 +40,13 @@ export function PreferenceSelect({ label, value, options, icon, saveAction }: {
           value={selected}
           onChange={(event) => change(event.currentTarget.value)}
         >
-          {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+          {options.map(({ value, label, language }) => (
+            <option key={value} value={value} lang={language}>{label}</option>
+          ))}
         </select>
         <ChevronDown className={styles.preferenceChevron} aria-hidden="true" />
       </div>
-      {failed && <p className={styles.preferenceError} role="alert">Could not save this preference.</p>}
+      {failed && <p className={styles.preferenceError} role="alert">{errorMessage}</p>}
     </div>
   );
 }
