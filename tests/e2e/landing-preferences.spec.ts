@@ -52,7 +52,7 @@ test.describe("landing language", () => {
     await page.getByRole("button", { name: "Refuser les cookies facultatifs" }).click();
 
     const [copyright, themeControl, languageControl] = await Promise.all([
-      footer.getByText(/© 2026 Taplify/).boundingBox(),
+      footer.getByText("© 2026 Taplify", { exact: true }).boundingBox(),
       footer.getByRole("group", { name: "Thème" }).boundingBox(),
       language.boundingBox(),
     ]);
