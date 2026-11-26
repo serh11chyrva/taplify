@@ -68,7 +68,6 @@ export const french = {
     cookie: "Cookies",
     starredProducts: "Les produits marqués d’un astérisque sont présentés à titre de démonstration.",
     placeholderLinks: "Ces liens sont provisoires.",
-    poweredBy: "hébergé par",
   },
   cookies: {
     manage: "Gérer les cookies",

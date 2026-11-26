@@ -5,6 +5,7 @@ test("follows the system theme and remembers an explicit theme", async ({ page }
   await page.goto("/");
   await page.getByRole("button", { name: "Reject optional" }).click();
 
+  const signUp = page.getByRole("link", { name: "Sign Up", exact: true });
   const footer = page.getByRole("contentinfo");
   const theme = footer.getByRole("group", { name: "Theme" });
   const system = theme.getByRole("button", { name: "System" });
@@ -12,12 +13,15 @@ test("follows the system theme and remembers an explicit theme", async ({ page }
   const dark = theme.getByRole("button", { name: "Dark" });
   await expect(system).toHaveAttribute("aria-pressed", "true");
   await expect(footer).toHaveCSS("background-color", "rgb(248, 246, 251)");
+  await expect(signUp).toHaveCSS("background-color", "rgb(0, 0, 0)");
 
   await page.emulateMedia({ colorScheme: "dark" });
   await expect(footer).toHaveCSS("background-color", "rgb(0, 0, 0)");
+  await expect(signUp).toHaveCSS("background-color", "rgb(255, 255, 255)");
 
   await light.click();
   await expect(footer).toHaveCSS("background-color", "rgb(248, 246, 251)");
+  await expect(signUp).toHaveCSS("background-color", "rgb(0, 0, 0)");
   await page.reload();
   await expect(light).toHaveAttribute("aria-pressed", "true");
   await expect(footer).toHaveCSS("background-color", "rgb(248, 246, 251)");

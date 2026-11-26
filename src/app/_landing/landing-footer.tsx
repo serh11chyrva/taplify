@@ -9,6 +9,7 @@ import { FooterSocials } from "./footer-socials";
 import { LanguageMenu } from "./language-menu";
 import { productLinks } from "./products";
 import { ScrollReveal } from "./scroll-reveal";
+import { TaplifyIcon } from "./taplify-icon";
 import { ThemeGroup } from "./theme-group";
 
 type FooterLinkItem = { label: string; marker?: string; href?: string; prefetch?: boolean };
@@ -115,7 +116,7 @@ export async function LandingFooter() {
         </div>
         <div className={styles.footerBottom}>
           <p className={styles.copyright}>
-            © 2026 Taplify {footer.poweredBy} <FooterLink label="Vercel" href="https://vercel.com/" />
+            © 2026 <TaplifyIcon className={styles.copyrightIcon} viewBox="18 18 126 118" /> Taplify
           </p>
           <div className={styles.footerPreferences}>
             <LanguageMenu value={language} copy={preferences} />

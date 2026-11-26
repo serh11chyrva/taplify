@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getSiteMessages } from "@/lib/i18n/messages";
@@ -9,16 +8,8 @@ import { LandingFooter } from "./_landing/landing-footer";
 import { LandingHeader } from "./_landing/landing-header";
 import { MarketingSections } from "./_landing/marketing-sections";
 import { ProductsMenu } from "./_landing/products-menu";
+import { TaplifyIcon } from "./_landing/taplify-icon";
 import styles from "./landing.module.css";
-
-const geistMonoItalic = localFont({
-  src: "./_fonts/GeistMono-SemiBoldItalic.woff2",
-  weight: "600",
-  style: "italic",
-  display: "swap",
-  adjustFontFallback: false,
-  fallback: ["monospace"],
-});
 
 export async function generateMetadata(): Promise<Metadata> {
   const { locale } = await getSitePreferences();
@@ -38,14 +29,8 @@ export default async function HomePage() {
       <LandingHeader>
         <div className={[styles.container, styles.headerInner].join(" ")}>
           <Link href="/" className={styles.brand}>
-            <svg className={styles.brandIcon} viewBox="0 0 160 160" aria-hidden="true">
-              <path
-                fill="currentColor"
-                fillRule="evenodd"
-                d="M144 18 105 72 140 84 101 98 93 136 72 104 28 126 50 92 18 76 59 68 68 36 86 63Z"
-              />
-            </svg>
-            <span className={geistMonoItalic.className}>taplify</span>
+            <TaplifyIcon className={styles.brandIcon} />
+            Taplify
           </Link>
           <nav className={styles.headerNav} aria-label={landing.mainNavigation}>
             <ProductsMenu label={landing.products} />

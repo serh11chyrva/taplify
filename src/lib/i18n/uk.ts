@@ -68,7 +68,6 @@ export const ukrainian = {
     cookie: "Файли cookie",
     starredProducts: "Продукти із зірочкою показано для демонстрації.",
     placeholderLinks: "Ці посилання тимчасові.",
-    poweredBy: "працює на платформі",
   },
   cookies: {
     manage: "Керувати файлами cookie",

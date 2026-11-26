@@ -69,7 +69,6 @@ export const english = {
     social: "Social",
     starredProducts: "Starred products are shown for demonstration purposes.",
     placeholderLinks: "These links are placeholders.",
-    poweredBy: "powered by",
   },
   cookies: {
     manage: "Manage Cookies",

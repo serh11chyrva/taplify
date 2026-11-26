@@ -19,7 +19,7 @@ const readmeFilename = /^(?:[^/]+\/)?readme(?:\.md|\.txt)?$/i;
 
 const assets = [
   {
-    name: "Geist and Geist Mono",
+    name: "Geist",
     license: "SIL Open Font License 1.1",
     author: "The Geist Project Authors",
     file: "src/app/_fonts/OFL.txt",

@@ -68,7 +68,6 @@ export const german = {
     cookie: "Cookies",
     starredProducts: "Mit einem Stern markierte Produkte dienen zur Demonstration.",
     placeholderLinks: "Diese Links sind Platzhalter.",
-    poweredBy: "gehostet bei",
   },
   cookies: {
     manage: "Cookies verwalten",

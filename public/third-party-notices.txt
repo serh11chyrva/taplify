@@ -17371,7 +17371,7 @@ SOFTWARE.
 
 ========================================================================
 
-Geist and Geist Mono (src/app/_fonts/OFL.txt)
+Geist (src/app/_fonts/OFL.txt)
 
 Copyright 2026 The Geist Project Authors (https://github.com/vercel/geist-font)
 

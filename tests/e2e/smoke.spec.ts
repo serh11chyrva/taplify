@@ -6,6 +6,9 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/One link\.\s*Your whole story\./);
   const header = page.getByRole("banner");
   await expect(header).not.toHaveAttribute("data-scrolled", "");
+  const brand = header.getByRole("link", { name: "Taplify", exact: true });
+  await expect(brand).toHaveCSS("font-style", "italic");
+  await expect(brand).toHaveCSS("font-weight", "700");
   const nav = page.getByRole("navigation", { name: "Main" });
   const products = nav.getByRole("button", { name: "Products" });
   const pricing = nav.getByRole("button", { name: "Pricing" });
@@ -42,7 +45,8 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
 
   const footer = page.getByRole("contentinfo");
   await footer.scrollIntoViewIfNeeded();
-  await expect(header).toHaveCSS("backdrop-filter", /blur\(/);
+  await expect(header).toHaveCSS("backdrop-filter", /blur\(12px\)/);
+  await expect(header).toHaveCSS("box-shadow", "none");
   await expect(footer).toHaveCSS("background-color", "rgb(0, 0, 0)");
   await expect(footer.getByRole("heading")).toHaveText(["Taplify", "Products", "Developers", "Legal", "Cookie", "Social"]);
   await expect(footer.getByRole("listitem").filter({ hasText: /\S/ })).toHaveText([
@@ -59,7 +63,16 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
   const socials = footer.getByRole("heading", { name: "Social", exact: true }).locator("..");
   await expect(socials.getByRole("link")).toHaveCount(0);
   for (const name of ["X", "YouTube", "Instagram", "TikTok"]) {
-    await expect(socials.getByRole("img", { name, exact: true })).toBeVisible();
+    const icon = socials.getByRole("img", { name, exact: true });
+    await expect(icon).toBeVisible();
+    await expect(icon.locator("..")).toHaveCSS("border-top-width", "0px");
+    const height = await icon.evaluate((svg) => {
+      const path = svg.querySelector("path");
+      const transform = path?.getScreenCTM();
+      if (!path || !transform) throw new Error("The social icon is missing its visible path.");
+      return path.getBBox().height * transform.d;
+    });
+    expect(height).toBeCloseTo(16, 0);
   }
   await expect(footer.getByRole("link", { name: "GitHub", exact: true }))
     .toHaveAttribute("href", "https://github.com/serh11chyrva/taplify");
@@ -78,11 +91,10 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
     return (arrowBounds.top + arrowBounds.bottom - linkBounds.top - linkBounds.bottom) / 2;
   });
   expect(Math.abs(arrowCenterOffset)).toBeLessThan(0.5);
-  const vercel = footer.getByRole("link", { name: "Vercel" });
-  await expect(vercel).toHaveAttribute("href", "https://vercel.com/");
-  await expect(footer.getByText(/© 2026 Taplify powered by/)).toBeAttached();
-  await vercel.hover();
-  await expect(vercel).toHaveCSS("text-decoration-line", "underline");
+  const copyright = footer.getByText("© 2026 Taplify", { exact: true });
+  await expect(copyright).toBeVisible();
+  await expect(copyright.locator("svg")).toBeVisible();
+  await expect(footer.getByRole("link", { name: "Vercel", exact: true })).toHaveCount(0);
 
   for (const name of ["Sign In", "Sign Up", "Create your first page"]) {
     await page.getByRole("link", { name, exact: true }).click();

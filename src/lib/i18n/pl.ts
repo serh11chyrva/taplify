@@ -68,7 +68,6 @@ export const polish = {
     cookie: "Pliki cookie",
     starredProducts: "Produkty oznaczone gwiazdką służą do celów demonstracyjnych.",
     placeholderLinks: "Te linki są tymczasowe.",
-    poweredBy: "działa na platformie",
   },
   cookies: {
     manage: "Zarządzaj plikami cookie",
