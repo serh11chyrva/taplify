@@ -3,13 +3,13 @@
 import { Check, ChevronDown, Globe } from "lucide-react";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import type { SiteMessages } from "@/lib/i18n/en";
-import { locales, type Locale } from "@/lib/site-preferences";
+import { locales, type Language } from "@/lib/site-preferences";
 import styles from "../landing.module.css";
 import { saveLanguage } from "./preference-actions";
 import { usePreference } from "./use-preference";
 
 export function LanguageMenu({ value, copy }: {
-  value: Locale | "auto";
+  value: Language;
   copy: SiteMessages["preferences"];
 }) {
   const { selected, pending, failed, change } = usePreference(value, saveLanguage);

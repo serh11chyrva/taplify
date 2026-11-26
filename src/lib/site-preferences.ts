@@ -10,6 +10,7 @@ export const locales = [
 ] as const;
 
 export type Locale = (typeof locales)[number]["value"];
+export type Language = Locale | "auto";
 
 export function parseTheme(value: string | undefined) {
   return themes.find((theme) => theme === value);
