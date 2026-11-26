@@ -50,6 +50,7 @@ export const english = {
   },
   footer: {
     home: "Home",
+    dashboard: "Dashboard",
     templates: "Templates",
     about: "About",
     support: "Support",
@@ -65,6 +66,7 @@ export const english = {
     licenses: "Licenses",
     companyInformation: "Company Information",
     cookie: "Cookie",
+    social: "Social",
     starredProducts: "Starred products are shown for demonstration purposes.",
     placeholderLinks: "These links are placeholders.",
     poweredBy: "powered by",

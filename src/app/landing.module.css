@@ -526,7 +526,7 @@ button.footerLink:is(:hover, :focus-visible) {
 
 .footerColumns {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(0.75rem, 3vw, 2rem);
 }
 
@@ -544,9 +544,30 @@ button.footerLink:is(:hover, :focus-visible) {
 
 .footerColumns ul {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.3rem;
   color: var(--landing-muted);
   font-size: 0.875rem;
+}
+
+.footerColumns .socialIcons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.socialIcons li {
+  display: grid;
+  inline-size: 2.125rem;
+  block-size: 2.125rem;
+  place-items: center;
+  border: 1px solid var(--landing-divider);
+  border-radius: 0.5rem;
+}
+
+.socialIcons svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+  fill: currentColor;
 }
 
 .footerLink {
@@ -747,6 +768,11 @@ button.footerLink {
   .split {
     grid-template-columns: 1fr;
   }
+
+  .footerColumns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 1.5rem;
+  }
 }
 
 @media (width <= 33rem) {
@@ -782,11 +808,6 @@ button.footerLink {
     padding: 0.35rem 0.55rem;
     text-align: center;
     white-space: normal;
-  }
-
-  .footerColumns {
-    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.1fr) minmax(0, 1fr);
-    gap: 0.55rem;
   }
 
   .footerColumns ul {

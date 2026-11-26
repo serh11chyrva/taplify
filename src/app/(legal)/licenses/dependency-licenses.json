@@ -2901,6 +2901,11 @@
       "name": "React Bits Dither",
       "license": "MIT + Commons Clause License Condition v1.0",
       "author": "David Haz"
+    },
+    {
+      "name": "Simple Icons social logos",
+      "license": "CC0-1.0",
+      "author": "Simple Icons Contributors"
     }
   ]
 }

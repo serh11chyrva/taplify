@@ -44,9 +44,9 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
   await footer.scrollIntoViewIfNeeded();
   await expect(header).toHaveCSS("backdrop-filter", /blur\(/);
   await expect(footer).toHaveCSS("background-color", "rgb(0, 0, 0)");
-  await expect(footer.getByRole("heading")).toHaveText(["Taplify", "Products", "Developers", "Legal", "Cookie"]);
-  await expect(footer.getByRole("listitem")).toHaveText([
-    "Home", "Templates**", "About**", "Support**", "FAQ & Guides**", "Status**",
+  await expect(footer.getByRole("heading")).toHaveText(["Taplify", "Products", "Developers", "Legal", "Cookie", "Social"]);
+  await expect(footer.getByRole("listitem").filter({ hasText: /\S/ })).toHaveText([
+    "Home", "Pricing**", "Dashboard", "Templates**", "About**", "Support**", "FAQ & Guides**", "Status**",
     "Taplify Commercial*", "Taplify Analytics*", "Taplify AI*",
     "GitHub", "Documentation**", "API**", "Integrations**", "Webhooks**",
     "Terms of Service", "Privacy Policy", "Licenses", "Company Information**",
@@ -54,6 +54,13 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
   ]);
   const cookieGroup = footer.getByRole("heading", { name: "Cookie", exact: true }).locator("..");
   await expect(cookieGroup.getByRole("listitem")).toHaveText(["Cookie Policy", "Manage Cookies"]);
+  await expect(footer.getByRole("link", { name: "Pricing**", exact: true })).toBeDisabled();
+  await expect(footer.getByRole("link", { name: "Dashboard", exact: true })).toHaveAttribute("href", "/dashboard");
+  const socials = footer.getByRole("heading", { name: "Social", exact: true }).locator("..");
+  await expect(socials.getByRole("link")).toHaveCount(0);
+  for (const name of ["X", "YouTube", "Instagram", "TikTok"]) {
+    await expect(socials.getByRole("img", { name, exact: true })).toBeVisible();
+  }
   await expect(footer.getByRole("link", { name: "GitHub", exact: true }))
     .toHaveAttribute("href", "https://github.com/serh11chyrva/taplify");
   await expect(footer.getByText("* Starred products are shown for demonstration purposes.")).toBeAttached();

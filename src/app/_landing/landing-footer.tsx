@@ -5,6 +5,7 @@ import { COOKIE_POLICY_PATH } from "@/lib/cookie-consent";
 import { getSiteMessages } from "@/lib/i18n/messages";
 import { getSitePreferences } from "@/server/site-preferences";
 import styles from "../landing.module.css";
+import { FooterSocials } from "./footer-socials";
 import { LanguageMenu } from "./language-menu";
 import { productLinks } from "./products";
 import { ScrollReveal } from "./scroll-reveal";
@@ -50,6 +51,8 @@ export async function LandingFooter() {
         title: "Taplify",
         links: [
           { label: footer.home, href: "/" },
+          { label: landing.pricing, marker: "**" },
+          { label: footer.dashboard, href: "/dashboard", prefetch: false },
           ...placeholders([footer.templates, footer.about, footer.support, footer.faqAndGuides, footer.status]),
         ],
       },
@@ -104,6 +107,7 @@ export async function LandingFooter() {
               ))}
             </div>
           ))}
+          <FooterSocials title={footer.social} />
         </div>
         <div className={styles.footerNotes}>
           <p>* {footer.starredProducts}</p>

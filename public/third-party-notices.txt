@@ -17503,6 +17503,18 @@ SOFTWARE.
 
 ========================================================================
 
+Simple Icons social logos (src/app/_landing/simple-icons.NOTICE.txt)
+
+Simple Icons
+https://github.com/simple-icons/simple-icons
+
+The X, YouTube, Instagram, and TikTok icons are available under CC0 1.0 Universal.
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Brand names and logos belong to their respective owners.
+
+========================================================================
+
 License declarations from published package manifests
 
 @napi-rs/wasm-runtime@1.2.6 — MIT
