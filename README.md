@@ -43,7 +43,7 @@ Better Auth owns accounts, users, verification records, and sessions through its
 
 ## Cookie consent and analytics
 
-Taplify loads the Google tag after a visitor allows **Analytics**. With the measurement ID unset, the banner stays hidden and **Manage Cookies** shows the necessary storage used by Taplify. The sign-in and session cookies work with any preference. Taplify stores the choice for 180 days in the current browser and origin. Increment `COOKIE_CONSENT_VERSION` when the purposes or recipients of optional data collection materially change, and update `/cookie-policy` to match the integrations offered.
+Taplify shows the cookie banner until a visitor records a choice. Without a measurement ID, the banner explains necessary cookies and **Manage Cookies** shows the necessary storage used by Taplify. If GA4 is enabled later, Taplify asks visitors who recorded a necessary-only choice for their analytics preference. The Google tag loads only after a visitor allows **Analytics**. Sign-in and session cookies work with any preference. Taplify stores the choice for 180 days in the current browser and origin. Increment `COOKIE_CONSENT_VERSION` when the purposes or recipients of optional data collection materially change, and update `/cookie-policy` to match the integrations offered.
 
 Use a GA4 web stream for Taplify and turn off **Enhanced measurement** in its stream settings. The app sends one `page_view` for each page after consent, including App Router navigation. When adding a page, update the measured paths in `TaplifyAnalytics` with a path suitable for analytics. The app reports unknown paths as `/404` so mistyped URLs stay out of GA4.
 

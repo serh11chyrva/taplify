@@ -10,15 +10,48 @@
 .banner {
   position: fixed;
   z-index: 50;
-  inset-inline-end: max(1rem, calc(env(safe-area-inset-right) + 0.5rem));
-  inset-block-end: max(1rem, calc(env(safe-area-inset-bottom) + 0.5rem));
-  inline-size: min(26rem, calc(100% - 2rem));
-  max-block-size: calc(100dvh - 2rem - env(safe-area-inset-bottom));
-  padding: 1rem;
+  inset-inline: 0;
+  inset-block-end: 0;
+  max-block-size: 50dvh;
+  overflow: auto;
+  padding-block: 0.875rem calc(0.875rem + env(safe-area-inset-bottom));
+  padding-inline: max(1rem, env(safe-area-inset-left)) max(1rem, env(safe-area-inset-right));
+  border-block-start: 1px solid var(--border);
+  background: #fff;
+  color: var(--foreground);
+  box-shadow: 0 -8px 32px rgb(0 0 0 / 16%);
+}
+
+.bannerContent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  max-inline-size: 75rem;
+  margin-inline: auto;
+}
+
+.bannerCopy {
+  flex: 1 1 22rem;
+}
+
+.bannerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.bannerActions > button {
+  min-block-size: 2.5rem;
+  block-size: auto;
+  padding-inline: 0.75rem;
+  cursor: pointer;
+  white-space: normal;
 }
 
 .bannerSpace {
-  block-size: calc(var(--cookie-banner-height, 0px) + 2rem + env(safe-area-inset-bottom));
+  block-size: var(--cookie-banner-height, 0px);
 }
 
 .dialog {
@@ -44,9 +77,14 @@
   outline-offset: 3px;
 }
 
-@media (width <= 32rem) {
-  .banner {
-    inset-inline: max(0.75rem, env(safe-area-inset-left)) max(0.75rem, env(safe-area-inset-right));
-    inline-size: auto;
+@media (width <= 48rem) {
+  .bannerActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    inline-size: 100%;
+  }
+
+  .bannerManage {
+    grid-column: 1 / -1;
   }
 }

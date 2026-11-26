@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { COOKIE_POLICY_PATH, type CookieConsent } from "@/lib/cookie-consent";
 import { createConsentStore } from "./consent-store";
 import styles from "./cookie-consent.module.css";
@@ -34,7 +34,10 @@ export function ManageCookiesButton({ className }: { className?: string }) {
   );
 }
 
-function CookieBanner({ save }: { save: (analytics: boolean) => boolean }) {
+function CookieBanner({ analyticsAvailable, save }: {
+  analyticsAvailable: boolean;
+  save: (analytics: boolean) => boolean;
+}) {
   const space = useRef<HTMLDivElement>(null);
   const banner = useRef<HTMLElement>(null);
   const [saveFailed, setSaveFailed] = useState(false);
@@ -60,23 +63,26 @@ function CookieBanner({ save }: { save: (analytics: boolean) => boolean }) {
   return (
     <>
       <div ref={space} className={styles.bannerSpace} aria-hidden="true" />
-      <section ref={banner} className={`${styles.panel} ${styles.banner}`} aria-labelledby="cookie-banner-heading">
-        <h2 id="cookie-banner-heading" className="text-base font-semibold">Cookies on Taplify</h2>
-        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-          Taplify uses essential cookies for sign-in. With your permission, Google Analytics helps us understand how people use Taplify.
-        </p>
-        {saveFailed && <p role="alert" className="mt-2 text-sm text-red-700">{SAVE_ERROR}</p>}
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <Button type="button" variant="outline" className="h-auto min-h-10 px-2 py-2 whitespace-normal" onClick={() => choose(true)}>
-            Accept all
-          </Button>
-          <Button type="button" variant="outline" className="h-auto min-h-10 px-2 py-2 whitespace-normal" onClick={() => choose(false)}>
-            Reject optional
-          </Button>
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-          <ManageCookiesButton className={styles.textAction} />
-          <Link className={styles.textAction} href={COOKIE_POLICY_PATH}>Cookie Policy</Link>
+      <section ref={banner} className={styles.banner} aria-labelledby="cookie-banner-heading">
+        <div className={styles.bannerContent}>
+          <div className={styles.bannerCopy}>
+            <h2 id="cookie-banner-heading" className="text-base font-semibold">Cookies on Taplify</h2>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+              Taplify uses necessary cookies for sign-in and remembers your choices in this browser.
+              {analyticsAvailable && " With your permission, Google Analytics helps us understand how people use Taplify."}
+              {" "}<Link className={styles.textAction} href={COOKIE_POLICY_PATH}>Cookie Policy</Link>
+            </p>
+            {saveFailed && <p role="alert" className="mt-2 text-sm text-red-700">{SAVE_ERROR}</p>}
+          </div>
+          <div className={styles.bannerActions}>
+            <ManageCookiesButton className={buttonVariants({ variant: "outline", className: styles.bannerManage })} />
+            <Button type="button" variant="outline" onClick={() => choose(analyticsAvailable)}>
+              {analyticsAvailable ? "Accept all" : "Confirm"}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => choose(false)}>
+              Reject optional
+            </Button>
+          </div>
         </div>
       </section>
     </>
@@ -160,14 +166,15 @@ export function CookieConsentProvider({ children, measurementId }: { children: R
   const [store] = useState(() => createConsentStore(measurementId));
   const consent = useSyncExternalStore(store.subscribe, store.getSnapshot, () => undefined);
   const [trigger, setTrigger] = useState<HTMLButtonElement | null>(null);
+  const analyticsAvailable = measurementId !== null;
 
   return (
     <OpenPreferences.Provider value={setTrigger}>
       {children}
-      {measurementId && consent === null && <CookieBanner save={store.save} />}
+      {consent === null && <CookieBanner analyticsAvailable={analyticsAvailable} save={store.save} />}
       {trigger && (
         <CookiePreferences
-          analyticsAvailable={measurementId !== null}
+          analyticsAvailable={analyticsAvailable}
           consent={consent}
           save={store.save}
           onClose={() => {

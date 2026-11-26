@@ -39,7 +39,7 @@ export function createConsentStore(measurementId: string | null) {
         const value = storage.getItem(COOKIE_CONSENT_KEY);
         const stored = parseCookieConsent(value);
         if (stored && stored.expiresAt > Date.now()) {
-          next = stored;
+          next = measurementId && stored.analytics === null ? null : stored;
         } else if (stored && storage.getItem(COOKIE_CONSENT_KEY) === value) {
           storage.removeItem(COOKIE_CONSENT_KEY);
         }
@@ -74,9 +74,9 @@ export function createConsentStore(measurementId: string | null) {
   }
 
   function save(analytics: boolean) {
-    const next = {
+    const next: CookieConsent = {
       version: COOKIE_CONSENT_VERSION,
-      analytics,
+      analytics: measurementId ? analytics : null,
       expiresAt: Date.now() + COOKIE_CONSENT_SECONDS * 1000,
     };
 

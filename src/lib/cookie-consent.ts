@@ -7,7 +7,8 @@ export const GA4_COOKIE_PREFIX = "taplify";
 
 export type CookieConsent = {
   version: number;
-  analytics: boolean;
+  // A null choice records an acknowledgement made while analytics was unavailable.
+  analytics: boolean | null;
   expiresAt: number;
 };
 
@@ -21,7 +22,7 @@ export function parseCookieConsent(value: string | null): CookieConsent | null {
     const consent = JSON.parse(value) as Partial<CookieConsent> | null;
     if (
       consent?.version === COOKIE_CONSENT_VERSION &&
-      typeof consent.analytics === "boolean" &&
+      (consent.analytics === null || typeof consent.analytics === "boolean") &&
       typeof consent.expiresAt === "number" &&
       Number.isSafeInteger(consent.expiresAt)
     ) {

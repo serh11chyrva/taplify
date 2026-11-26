@@ -47,24 +47,37 @@ async function interceptAnalytics(context: BrowserContext) {
   };
 }
 
-test("offers necessary cookie settings without a configured analytics tag", async ({ page, context }) => {
+test("shows the cookie banner and remembers a confirmation without GA4", async ({ page, context }) => {
   test.skip(ga4MeasurementId !== null, "Requires a build without GA4.");
   const analytics = await interceptAnalytics(context);
+  const banner = page.getByRole("region", { name: "Cookies on Taplify" });
 
   for (const path of ["/", "/login", COOKIE_POLICY_PATH, "/unknown-cookie-test-page"]) {
     await page.goto(path);
     const footer = page.getByRole("contentinfo");
     await expect(footer.getByRole("link", { name: "Cookie Policy" })).toHaveAttribute("href", COOKIE_POLICY_PATH);
-    await expect(page.getByRole("region", { name: "Cookies on Taplify" })).toHaveCount(0);
-    await footer.getByRole("button", { name: "Manage Cookies" }).click();
-
-    const preferences = page.getByRole("dialog", { name: "Cookie preferences" });
-    await expect(preferences.getByText("Always active")).toBeVisible();
-    await expect(preferences.getByRole("checkbox", { name: "Analytics" })).toHaveCount(0);
-    await preferences.getByRole("button", { name: "Close" }).click();
-    await expect(preferences).toBeHidden();
+    await expect(footer.getByRole("button", { name: "Manage Cookies" })).toBeVisible();
+    await expect(banner.getByRole("button", { name: "Manage Cookies" })).toBeVisible();
+    await expect(banner.getByRole("button", { name: "Confirm" })).toBeVisible();
+    await expect(banner.getByRole("button", { name: "Reject optional" })).toBeVisible();
   }
 
+  await expect(banner).toHaveCSS("position", "fixed");
+  await banner.getByRole("button", { name: "Manage Cookies" }).click();
+  const preferences = page.getByRole("dialog", { name: "Cookie preferences" });
+  await expect(preferences.getByText("Always active")).toBeVisible();
+  await expect(preferences.getByRole("checkbox", { name: "Analytics" })).toHaveCount(0);
+  await preferences.getByRole("button", { name: "Close" }).click();
+  await expect(preferences).toBeHidden();
+
+  await banner.getByRole("button", { name: "Confirm" }).click();
+  await expect(banner).toBeHidden();
+  const savedChoice = await page.evaluate((key) => JSON.parse(window.localStorage.getItem(key) ?? "null"), COOKIE_CONSENT_KEY);
+  expect(savedChoice).toMatchObject({ version: COOKIE_CONSENT_VERSION, analytics: null });
+  await page.goto("/login");
+  await expect(banner).toBeHidden();
+  await page.getByRole("contentinfo").getByRole("button", { name: "Manage Cookies" }).click();
+  await expect(preferences.getByText("Always active")).toBeVisible();
   expect(analytics.requests).toEqual([]);
 });
 
@@ -79,12 +92,9 @@ test.describe("cookie consent with GA4 configured", () => {
     await expect(banner).toBeVisible();
     const bounds = await banner.evaluate((element) => {
       const { left, right, bottom } = element.getBoundingClientRect();
-      return { left, right, bottom };
+      return { left, rightGap: document.documentElement.clientWidth - right, bottomGap: window.innerHeight - bottom };
     });
-    expect(bounds.left).toBeGreaterThanOrEqual(8);
-    expect(bounds.right).toBeLessThanOrEqual(312);
-    expect(bounds.bottom).toBeGreaterThanOrEqual(544);
-    expect(bounds.bottom).toBeLessThanOrEqual(568);
+    expect(bounds).toEqual({ left: 0, rightGap: 0, bottomGap: 0 });
 
     const opener = banner.getByRole("button", { name: "Manage Cookies" });
     await opener.focus();
@@ -164,6 +174,20 @@ test.describe("cookie consent with GA4 configured", () => {
     await page.goto(COOKIE_POLICY_PATH);
     await expect(page.getByRole("region", { name: "Cookies on Taplify" })).toBeVisible();
     expect(await page.evaluate((key) => window.localStorage.getItem(key), COOKIE_CONSENT_KEY)).toBeNull();
+    expect(analytics.requests).toEqual([]);
+  });
+
+  test("asks for analytics consent after a necessary-only confirmation", async ({ page, context }) => {
+    const analytics = await interceptAnalytics(context);
+    await page.addInitScript(({ key, version }) => {
+      window.localStorage.setItem(key, JSON.stringify({ version, analytics: null, expiresAt: Date.now() + 60_000 }));
+    }, { key: COOKIE_CONSENT_KEY, version: COOKIE_CONSENT_VERSION });
+
+    await page.goto(COOKIE_POLICY_PATH);
+    const banner = page.getByRole("region", { name: "Cookies on Taplify" });
+    await expect(banner.getByRole("button", { name: "Accept all" })).toBeVisible();
+    await banner.getByRole("button", { name: "Manage Cookies" }).click();
+    await expect(page.getByRole("dialog").getByRole("checkbox", { name: "Analytics" })).not.toBeChecked();
     expect(analytics.requests).toEqual([]);
   });
 
