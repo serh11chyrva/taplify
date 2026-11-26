@@ -1,16 +1,19 @@
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
+import { ManageCookiesButton } from "@/components/cookies/cookie-consent-provider";
+import { COOKIE_POLICY_PATH } from "@/lib/cookie-consent";
 import styles from "../landing.module.css";
 import { productLinks } from "./products";
 import { ScrollReveal } from "./scroll-reveal";
 
 type FooterLinkItem = { label: string; marker?: string; href?: string; prefetch?: boolean };
+type FooterItem = FooterLinkItem | { label: "Manage Cookies"; manageCookies: true };
 
 function placeholders(labels: string[]) {
   return labels.map((label) => ({ label, marker: "**" }));
 }
 
-const footerColumns: { title: string; links: FooterLinkItem[] }[][] = [
+const footerColumns: { title: string; links: FooterItem[] }[][] = [
   [
     { title: "Taplify", links: placeholders(["Templates", "About", "Support", "FAQ & Guides", "Status"]) },
     { title: "Products", links: productLinks },
@@ -24,7 +27,8 @@ const footerColumns: { title: string; links: FooterLinkItem[] }[][] = [
     links: [
       { label: "Terms of Service", href: "/terms-of-service" },
       { label: "Privacy Policy", href: "/privacy-policy" },
-      { label: "Cookie Policy", marker: "**" },
+      { label: "Cookie Policy", href: COOKIE_POLICY_PATH },
+      { label: "Manage Cookies", manageCookies: true },
       { label: "Licenses", href: "/licenses", prefetch: false },
       { label: "Company Information", marker: "**" },
     ],
@@ -66,8 +70,10 @@ export function LandingFooter() {
                 <div key={title}>
                   <h2>{title}</h2>
                   <ul role="list">
-                    {links.map((link) => (
-                      <li key={link.label}><FooterLink {...link} /></li>
+                    {links.map((item) => (
+                      <li key={item.label}>
+                        {"manageCookies" in item ? <ManageCookiesButton className={styles.footerLink} /> : <FooterLink {...item} />}
+                      </li>
                     ))}
                   </ul>
                 </div>

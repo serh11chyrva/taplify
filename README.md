@@ -2,7 +2,7 @@
 
 A small SaaS for public link pages, portfolios, contact forms, leads, and analytics.
 
-This bootstrap implements the technical foundation from the general MVP plan. It includes a landing page, Google sign-in wiring, a session-protected dashboard shell, a Hono API, MongoDB connection helpers, a representative Typegoose model, and a Vercel Blob adapter. Page creation, editing, publishing, forms, leads, and analytics are the next implementation phases; they are not implemented yet.
+This bootstrap implements the technical foundation from the general MVP plan. It includes a landing page, Google sign-in wiring, a session-protected dashboard shell, a Hono API, MongoDB connection helpers, a representative Typegoose model, and a Vercel Blob adapter. Taplify can use Google Analytics to measure visits with visitor consent. Page creation, editing, publishing, forms, leads, and analytics for page owners are future phases.
 
 ## Local development
 
@@ -28,6 +28,7 @@ Open [localhost:3000](http://localhost:3000). The landing page and health endpoi
 | `BETTER_AUTH_URL` | Exact application origin, e.g. `http://localhost:3000`. |
 | `GOOGLE_CLIENT_ID` | Google OAuth web application client ID. |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret. |
+| `NEXT_PUBLIC_GA4_MEASUREMENT_ID` | Optional GA4 web stream ID (`G-…`). Set it before building. |
 | `BLOB_READ_WRITE_TOKEN` | Token for a public Vercel Blob store; required only for image storage. |
 
 Generate an auth secret with:
@@ -39,6 +40,14 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
 Create a Google OAuth **Web application** client. Register `http://localhost:3000` as an authorized JavaScript origin and `http://localhost:3000/api/auth/callback/google` as an authorized redirect URI. Add the equivalent production origin and callback for a stable deployment domain. Set `BETTER_AUTH_URL` to that same origin. See the [Better Auth Google guide](https://better-auth.com/docs/authentication/google).
 
 Better Auth owns accounts, users, verification records, and sessions through its [MongoDB adapter](https://better-auth.com/docs/adapters/mongo). There is no Typegoose User model. The auth adapter receives the MongoClient to enable transactions; for local OAuth testing, use Atlas or a local replica set instead of a standalone MongoDB instance.
+
+## Cookie consent and analytics
+
+Taplify loads the Google tag after a visitor allows **Analytics**. With the measurement ID unset, the banner stays hidden and **Manage Cookies** shows the necessary storage used by Taplify. The sign-in and session cookies work with any preference. Taplify stores the choice for 180 days in the current browser and origin. Increment `COOKIE_CONSENT_VERSION` when the purposes or recipients of optional data collection materially change, and update `/cookie-policy` to match the integrations offered.
+
+Use a GA4 web stream for Taplify and turn off **Enhanced measurement** in its stream settings. The app sends one `page_view` for each page after consent, including App Router navigation. When adding a page, update the measured paths in `TaplifyAnalytics` with a path suitable for analytics. The app reports unknown paths as `/404` so mistyped URLs stay out of GA4.
+
+Set the measurement ID for the intended Vercel environment and redeploy to apply it. On a test deployment, use a test GA4 property and verify the current page and client-side navigations in DebugView. In the browser network panel, confirm that declining or withdrawing consent blocks further GA4 traffic, then check that Google sign-in still works.
 
 ## Structure and boundaries
 

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { COOKIE_POLICY_PATH, ga4MeasurementId } from "@/lib/cookie-consent";
 import { ContactEmail } from "../contact-email";
 import styles from "../legal.module.css";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "How the Taplify demo handles sign-in, session, and contact data.",
+  description: "How the Taplify demo handles personal data.",
 };
 
 export default function PrivacyPolicyPage() {
@@ -32,7 +34,19 @@ export default function PrivacyPolicyPage() {
           Sessions expire after a limited period and can be renewed while you use the site.
           Signing out ends your current session.
         </p>
+        <p>See the <Link href={COOKIE_POLICY_PATH}>Cookie Policy</Link> for details and to manage your preferences.</p>
       </section>
+
+      {ga4MeasurementId && (
+        <section>
+          <h2>Analytics</h2>
+          <p>
+            With your permission, Google Analytics measures visits to Taplify using browser and device information
+            and a random identifier stored in cookies. See the <Link href={COOKIE_POLICY_PATH}>Cookie Policy</Link>
+            {" "}for details and to change your choice.
+          </p>
+        </section>
+      )}
 
       <section>
         <h2>Hosting and diagnostics</h2>

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/server/services/session";
 import { SignOut } from "@/components/auth/sign-out";
+import { CookieFooter } from "@/components/cookies/cookie-footer";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <SignOut />
       </header>
       {children}
+      <CookieFooter className="border-t pt-6" />
     </div>
   );
 }

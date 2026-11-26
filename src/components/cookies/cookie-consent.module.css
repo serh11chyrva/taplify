@@ -1,0 +1,52 @@
+.panel {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: #fff;
+  color: var(--foreground);
+  box-shadow: 0 12px 36px rgb(0 0 0 / 18%);
+  overflow: auto;
+}
+
+.banner {
+  position: fixed;
+  z-index: 50;
+  inset-inline-end: max(1rem, calc(env(safe-area-inset-right) + 0.5rem));
+  inset-block-end: max(1rem, calc(env(safe-area-inset-bottom) + 0.5rem));
+  inline-size: min(26rem, calc(100% - 2rem));
+  max-block-size: calc(100dvh - 2rem - env(safe-area-inset-bottom));
+  padding: 1rem;
+}
+
+.bannerSpace {
+  block-size: calc(var(--cookie-banner-height, 0px) + 2rem + env(safe-area-inset-bottom));
+}
+
+.dialog {
+  inline-size: min(28rem, calc(100% - 2rem));
+  max-block-size: calc(100dvh - 2rem);
+  margin: auto;
+  padding: clamp(1rem, 4vw, 1.5rem);
+}
+
+.dialog::backdrop {
+  background: rgb(0 0 0 / 50%);
+}
+
+.textAction {
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.textAction:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+@media (width <= 32rem) {
+  .banner {
+    inset-inline: max(0.75rem, env(safe-area-inset-left)) max(0.75rem, env(safe-area-inset-right));
+    inline-size: auto;
+  }
+}

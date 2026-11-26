@@ -77,7 +77,8 @@
 
 .headerLink:is(:hover, :focus-visible),
 .productLink:is(:hover, :focus-visible),
-.footerLink:any-link:is(:hover, :focus-visible) {
+.footerLink:any-link:is(:hover, :focus-visible),
+button.footerLink:is(:hover, :focus-visible) {
   text-decoration-line: underline;
   text-underline-offset: 0.22em;
   text-decoration-thickness: 0.065em;
@@ -499,6 +500,11 @@
   display: inline-block;
   max-inline-size: 100%;
   overflow-wrap: anywhere;
+}
+
+button.footerLink {
+  cursor: pointer;
+  text-align: start;
 }
 
 .footerLink:hover,
