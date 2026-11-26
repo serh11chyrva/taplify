@@ -40,7 +40,7 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
     "Templates**", "About**", "Support**", "FAQ & Guides**", "Status**",
     "Taplify Commercial*", "Taplify Analytics*", "Taplify AI*",
     "GitHub**", "Documentation**", "API**", "Integrations**", "Webhooks**",
-    "Terms of Service", "Privacy Policy", "Cookie Policy**", "Licenses**", "Company Information**",
+    "Terms of Service", "Privacy Policy", "Cookie Policy**", "Licenses", "Company Information**",
   ]);
   await expect(footer.getByText("* Starred products are shown for demonstration purposes.")).toBeAttached();
   await expect(footer.getByText("** These links are placeholders.")).toBeAttached();
@@ -80,6 +80,23 @@ test("opens public policy pages from the footer and by URL", async ({ page }) =>
       .toHaveAttribute("href", "mailto:serhiichyrva@hotmail.com");
     await expect(page.getByRole("link", { name: "Back to Taplify" })).toHaveAttribute("href", "/");
   }
+});
+
+test("opens Licenses from the footer and serves its notices", async ({ page, request }) => {
+  await page.goto("/");
+  const link = page.getByRole("contentinfo").getByRole("link", { name: "Licenses", exact: true });
+  await expect(link).toHaveAttribute("href", "/licenses");
+  await link.click();
+  await expect(page).toHaveURL("/licenses");
+  await expect(page.getByRole("heading", { name: "Licenses", level: 1 })).toBeVisible();
+
+  expect((await page.goto("/licenses"))?.ok()).toBe(true);
+  await expect(page.getByRole("table", { name: "Dependencies" })).toBeVisible();
+  const noticesPath = "/third-party-notices.txt";
+  await expect(page.getByRole("link", { name: "Download third-party notices" })).toHaveAttribute("href", noticesPath);
+  const response = await request.get(noticesPath);
+  expect(response.ok()).toBe(true);
+  expect(await response.text()).toContain("React Bits Dither");
 });
 
 test("protects the dashboard from anonymous visitors", async ({ page }) => {

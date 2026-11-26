@@ -47,3 +47,49 @@
 .updated {
   font-size: 0.875rem;
 }
+
+.assets {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.assets dt {
+  font-weight: 600;
+}
+
+.assets dd {
+  color: var(--landing-muted);
+}
+
+.dependencies {
+  inline-size: 100%;
+  margin-block-start: 1rem;
+  table-layout: fixed;
+  font-size: 0.875rem;
+  text-align: start;
+}
+
+.dependencies th,
+.dependencies td {
+  border-block-end: 1px solid var(--landing-divider);
+  padding: 0.55rem 0.5rem;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.dependencies th {
+  text-align: start;
+  font-weight: 650;
+}
+
+.dependencies td {
+  color: var(--landing-muted);
+}
+
+.dependencies th:first-child {
+  inline-size: 47%;
+}
+
+.dependencies th:nth-child(2) {
+  inline-size: 21%;
+}

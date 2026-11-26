@@ -4,7 +4,7 @@ import styles from "../landing.module.css";
 import { productLinks } from "./products";
 import { ScrollReveal } from "./scroll-reveal";
 
-type FooterLinkItem = { label: string; marker?: string; href?: string };
+type FooterLinkItem = { label: string; marker?: string; href?: string; prefetch?: boolean };
 
 function placeholders(labels: string[]) {
   return labels.map((label) => ({ label, marker: "**" }));
@@ -24,12 +24,14 @@ const footerColumns: { title: string; links: FooterLinkItem[] }[][] = [
     links: [
       { label: "Terms of Service", href: "/terms-of-service" },
       { label: "Privacy Policy", href: "/privacy-policy" },
-      ...placeholders(["Cookie Policy", "Licenses", "Company Information"]),
+      { label: "Cookie Policy", marker: "**" },
+      { label: "Licenses", href: "/licenses", prefetch: false },
+      { label: "Company Information", marker: "**" },
     ],
   }],
 ];
 
-function FooterLink({ label, marker, href }: FooterLinkItem) {
+function FooterLink({ label, marker, href, prefetch }: FooterLinkItem) {
   const content = (
     <>
       {label}{marker && <sup>{marker}</sup>}
@@ -38,7 +40,7 @@ function FooterLink({ label, marker, href }: FooterLinkItem) {
   );
 
   if (href?.startsWith("/")) {
-    return <Link className={styles.footerLink} href={href}>{content}</Link>;
+    return <Link className={styles.footerLink} href={href} prefetch={prefetch}>{content}</Link>;
   }
 
   return (

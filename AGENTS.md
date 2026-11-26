@@ -25,3 +25,7 @@ When the task is complete on local `main`, compare the branch with the latest `o
 ### Checks
 
 Run local builds, tests, lint, and type checks only when the user explicitly requests them. Use code review and Git checks such as `git diff --check` for verification by default. Add or update tests when the task or repository requires them or when they cover a specific regression risk. GitHub Actions runs automatically on push.
+
+### Dependency Licenses
+
+When adding, removing, or updating dependencies, including lockfile-only changes, or changing a bundled asset, run `node scripts/update-licenses.mjs` from the repository root. Review the Licenses catalog and third-party notices and commit their updates with the dependency or asset change.
