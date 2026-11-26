@@ -1,10 +1,5 @@
 import { COOKIE_CONSENT_SECONDS, GA4_COOKIE_PREFIX } from "@/lib/cookie-consent";
 
-type TagWindow = Window & {
-  dataLayer?: unknown[];
-  [key: `ga-disable-${string}`]: boolean | undefined;
-};
-
 const defaultConsent = {
   ad_storage: "denied",
   ad_user_data: "denied",
@@ -16,7 +11,8 @@ const analyticsCookie = `${GA4_COOKIE_PREFIX}_ga`;
 
 function gtag(...command: unknown[]): void;
 function gtag() {
-  const tagWindow = window as TagWindow;
+  const tagWindow: Window & { dataLayer?: unknown[] } = window;
+  // eslint-disable-next-line prefer-rest-params -- The Google tag queue uses Arguments objects for commands.
   (tagWindow.dataLayer ??= []).push(arguments);
 }
 
@@ -26,7 +22,7 @@ export function prepareGoogleTag() {
 }
 
 export function stopGoogleAnalytics(measurementId: string | null) {
-  if (measurementId) (window as TagWindow)[`ga-disable-${measurementId}`] = true;
+  if (measurementId) Reflect.set(window, `ga-disable-${measurementId}`, true);
 
   try {
     for (const cookie of document.cookie.split(";")) {
@@ -45,7 +41,7 @@ export function recordGoogleAnalyticsPage(
   page: { page_location: string; page_referrer: string },
   start: boolean,
 ) {
-  (window as TagWindow)[`ga-disable-${measurementId}`] = false;
+  Reflect.set(window, `ga-disable-${measurementId}`, false);
 
   if (start) {
     gtag("consent", "update", { ...defaultConsent, analytics_storage: "granted" });
