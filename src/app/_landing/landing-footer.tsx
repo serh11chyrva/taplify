@@ -15,12 +15,21 @@ function placeholders(labels: string[]) {
 
 const footerColumns: { title: string; links: FooterItem[] }[][] = [
   [
-    { title: "Taplify", links: placeholders(["Templates", "About", "Support", "FAQ & Guides", "Status"]) },
+    {
+      title: "Taplify",
+      links: [
+        { label: "Home", href: "/" },
+        ...placeholders(["Templates", "About", "Support", "FAQ & Guides", "Status"]),
+      ],
+    },
     { title: "Products", links: productLinks },
   ],
   [{
     title: "Developers",
-    links: placeholders(["GitHub", "Documentation", "API", "Integrations", "Webhooks"]),
+    links: [
+      { label: "GitHub", href: "https://github.com/serh11chyrva/taplify" },
+      ...placeholders(["Documentation", "API", "Integrations", "Webhooks"]),
+    ],
   }],
   [
     {

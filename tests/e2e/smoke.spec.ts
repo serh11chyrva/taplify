@@ -37,14 +37,16 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
   await expect(footer).toHaveCSS("background-color", "rgb(0, 0, 0)");
   await expect(footer.getByRole("heading")).toHaveText(["Taplify", "Products", "Developers", "Legal", "Cookie"]);
   await expect(footer.getByRole("listitem")).toHaveText([
-    "Templates**", "About**", "Support**", "FAQ & Guides**", "Status**",
+    "Home", "Templates**", "About**", "Support**", "FAQ & Guides**", "Status**",
     "Taplify Commercial*", "Taplify Analytics*", "Taplify AI*",
-    "GitHub**", "Documentation**", "API**", "Integrations**", "Webhooks**",
+    "GitHub", "Documentation**", "API**", "Integrations**", "Webhooks**",
     "Terms of Service", "Privacy Policy", "Licenses", "Company Information**",
     "Cookie Policy", "Manage Cookies",
   ]);
   const cookieGroup = footer.getByRole("heading", { name: "Cookie", exact: true }).locator("..");
   await expect(cookieGroup.getByRole("listitem")).toHaveText(["Cookie Policy", "Manage Cookies"]);
+  await expect(footer.getByRole("link", { name: "GitHub", exact: true }))
+    .toHaveAttribute("href", "https://github.com/serh11chyrva/taplify");
   await expect(footer.getByText("* Starred products are shown for demonstration purposes.")).toBeAttached();
   await expect(footer.getByText("** These links are placeholders.")).toBeAttached();
   const templates = footer.getByRole("link", { name: "Templates**" });
@@ -92,6 +94,11 @@ test("opens public policy pages from the footer and by URL", async ({ page }) =>
       .toHaveAttribute("href", "mailto:serhiichyrva@hotmail.com");
     await expect(page.getByRole("link", { name: "Back to Taplify" })).toHaveAttribute("href", "/");
   }
+
+  const home = page.getByRole("contentinfo").getByRole("link", { name: "Home", exact: true });
+  await expect(home).toHaveAttribute("href", "/");
+  await home.click();
+  await expect(page).toHaveURL("/");
 });
 
 test("opens Licenses from the footer and serves its notices", async ({ page, request }) => {
