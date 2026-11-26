@@ -22,17 +22,24 @@ const footerColumns: { title: string; links: FooterItem[] }[][] = [
     title: "Developers",
     links: placeholders(["GitHub", "Documentation", "API", "Integrations", "Webhooks"]),
   }],
-  [{
-    title: "Legal",
-    links: [
-      { label: "Terms of Service", href: "/terms-of-service" },
-      { label: "Privacy Policy", href: "/privacy-policy" },
-      { label: "Cookie Policy", href: COOKIE_POLICY_PATH },
-      { label: "Manage Cookies", manageCookies: true },
-      { label: "Licenses", href: "/licenses", prefetch: false },
-      { label: "Company Information", marker: "**" },
-    ],
-  }],
+  [
+    {
+      title: "Legal",
+      links: [
+        { label: "Terms of Service", href: "/terms-of-service" },
+        { label: "Privacy Policy", href: "/privacy-policy" },
+        { label: "Licenses", href: "/licenses", prefetch: false },
+        { label: "Company Information", marker: "**" },
+      ],
+    },
+    {
+      title: "Cookie",
+      links: [
+        { label: "Cookie Policy", href: COOKIE_POLICY_PATH },
+        { label: "Manage Cookies", manageCookies: true },
+      ],
+    },
+  ],
 ];
 
 function FooterLink({ label, marker, href, prefetch }: FooterLinkItem) {
