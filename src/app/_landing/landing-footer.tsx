@@ -1,15 +1,14 @@
-import { ArrowUpRight, Globe, SunMoon } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { ManageCookiesButton } from "@/components/cookies/cookie-consent-provider";
 import { COOKIE_POLICY_PATH } from "@/lib/cookie-consent";
 import { getSiteMessages } from "@/lib/i18n/messages";
-import { locales, themes } from "@/lib/site-preferences";
 import { getSitePreferences } from "@/server/site-preferences";
 import styles from "../landing.module.css";
-import { saveLanguage, saveTheme } from "./preference-actions";
-import { PreferenceSelect } from "./preference-select";
+import { LanguageMenu } from "./language-menu";
 import { productLinks } from "./products";
 import { ScrollReveal } from "./scroll-reveal";
+import { ThemeGroup } from "./theme-group";
 
 type FooterLinkItem = { label: string; marker?: string; href?: string; prefetch?: boolean };
 type FooterItem = FooterLinkItem | { label: string; manageCookies: true };
@@ -115,25 +114,8 @@ export async function LandingFooter() {
             © 2026 Taplify {footer.poweredBy} <FooterLink label="Vercel" href="https://vercel.com/" />
           </p>
           <div className={styles.footerPreferences}>
-            <PreferenceSelect
-              label={preferences.theme}
-              value={theme}
-              options={themes.map((value) => ({ value, label: preferences[value] }))}
-              icon={<SunMoon />}
-              saveAction={saveTheme}
-              errorMessage={preferences.saveError}
-            />
-            <PreferenceSelect
-              label={preferences.language}
-              value={language}
-              options={[
-                { value: "auto", label: preferences.automatic },
-                ...locales.map(({ value, label }) => ({ value, label, language: value })),
-              ]}
-              icon={<Globe />}
-              saveAction={saveLanguage}
-              errorMessage={preferences.saveError}
-            />
+            <LanguageMenu value={language} copy={preferences} />
+            <ThemeGroup value={theme} copy={preferences} />
           </div>
         </div>
       </ScrollReveal>
