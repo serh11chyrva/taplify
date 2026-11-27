@@ -111,23 +111,28 @@ test("fits the navigation, footer columns, and link arrows on a narrow screen", 
 
   const header = page.getByRole("banner");
   const toggle = header.getByRole("button", { name: "Main", exact: true });
-  const nav = header.getByRole("navigation", { name: "Main" });
-  const signIn = header.getByRole("link", { name: "Sign In", exact: true });
+  const dialog = page.getByRole("dialog", { name: "Main" });
+  const nav = dialog.getByRole("navigation", { name: "Main" });
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
-  await expect(nav).toBeHidden();
-  await expect(signIn).toBeHidden();
+  await expect(dialog).toBeHidden();
+  await expect(header.getByRole("link", { name: "Sign In", exact: true })).toBeHidden();
 
   await toggle.click();
+  await expect(dialog).toHaveCSS("width", "320px");
+  await expect(dialog).toHaveCSS("height", "740px");
+  await expect(page.locator("html")).toHaveCSS("overflow", "hidden");
+  await expect(dialog.getByRole("button", { name: "Close" })).toBeFocused();
   await expect(nav).toBeVisible();
-  await expect(signIn).toBeVisible();
-  await expect(header.getByRole("link", { name: "Sign Up", exact: true })).toBeVisible();
+  await expect(dialog.getByRole("link", { name: "Sign In", exact: true })).toBeVisible();
+  await expect(dialog.getByRole("link", { name: "Sign Up", exact: true })).toBeVisible();
   const products = nav.getByRole("button", { name: "Products" });
   await products.press("Enter");
   await expect(products).toHaveAttribute("aria-expanded", "true");
   await products.press("Escape");
   await expect(products).toHaveAttribute("aria-expanded", "false");
-  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(dialog).toBeVisible();
   await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
   await expect(toggle).toBeFocused();
 
@@ -154,6 +159,10 @@ test("fits the navigation, footer columns, and link arrows on a narrow screen", 
     const icon = element.querySelector("svg");
     return Boolean(icon && icon.getBoundingClientRect().right <= element.getBoundingClientRect().right + 0.5);
   })).toBe(true);
+
+  await toggle.click();
+  await dialog.getByRole("link", { name: "Sign Up", exact: true }).click();
+  await expect(page).toHaveURL("/login");
 });
 
 test("opens public policy pages from the footer and by URL", async ({ page }) => {

@@ -48,7 +48,8 @@
   display: contents;
 }
 
-.headerMenuToggle {
+.headerMenuToggle,
+.headerDialog {
   display: none;
 }
 
@@ -784,9 +785,16 @@ button.footerLink {
 }
 
 @media (width <= 40rem) {
+  :global(html):has(.headerDialog[open]) {
+    overflow: hidden;
+  }
+
   .headerInner {
-    position: relative;
     grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .headerMenu {
+    display: none;
   }
 
   .headerMenuToggle {
@@ -797,25 +805,32 @@ button.footerLink {
     cursor: pointer;
   }
 
-  .headerMenu {
-    position: absolute;
-    inset-block-start: calc(100% - 0.25rem);
-    inset-inline-end: 0;
-    display: none;
-    inline-size: min(100%, 17rem);
-    max-block-size: calc(100svh - var(--landing-header-height) - 0.5rem);
-    gap: 0.65rem;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding: 0.65rem;
-    border: 1px solid var(--landing-divider);
-    border-radius: 0.65rem;
+  .headerDialog[open] {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    inline-size: 100%;
+    block-size: 100%;
+    block-size: 100dvh;
+    max-inline-size: none;
+    max-block-size: none;
+    grid-template-rows: var(--landing-header-height) minmax(0, 1fr);
+    overflow: hidden;
+    margin: 0;
     background: var(--landing-surface);
-    box-shadow: 0 0.6rem 1.5rem var(--landing-shadow);
+    color: var(--landing-text);
   }
 
-  .headerMenu[data-open] {
+  .headerDialogBody {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .headerDialogContent {
     display: grid;
+    gap: 1rem;
+    padding-block: 1rem calc(1rem + env(safe-area-inset-bottom));
+    border-block-start: 1px solid var(--landing-divider);
   }
 
   .headerNav {
@@ -826,7 +841,9 @@ button.footerLink {
 
   .headerLink {
     inline-size: 100%;
+    min-block-size: 3rem;
     padding-inline: 0.65rem;
+    font-size: 1rem;
     text-align: start;
   }
 
@@ -844,7 +861,7 @@ button.footerLink {
   .headerActions {
     display: grid;
     justify-self: stretch;
-    padding-block-start: 0.65rem;
+    padding-block-start: 1rem;
     border-block-start: 1px solid var(--landing-divider);
   }
 }

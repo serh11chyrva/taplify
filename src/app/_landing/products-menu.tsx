@@ -46,6 +46,7 @@ export function ProductsMenu({ label }: { label: string }) {
       }}
       onKeyDown={(event) => {
         if (event.key !== "Escape" || !open) return;
+        event.preventDefault();
         event.stopPropagation();
         trigger.current?.focus();
         setOpen(false);
