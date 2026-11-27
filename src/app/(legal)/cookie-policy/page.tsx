@@ -63,6 +63,16 @@ export default function CookiePolicyPage() {
       )}
 
       <section>
+        <h2>Analytics on published Taplify pages</h2>
+        <p>
+          When page analytics is available, you can allow the page owner to measure visits and link clicks.
+          The <code>taplify_page_analytics</code> cookie stores a browser identifier for up to 90 days.
+          If you decline, <code>taplify_page_analytics_declined</code> remembers the choice for up to 90 days.
+          Use Page analytics settings on a published page to change your choice.
+        </p>
+      </section>
+
+      <section>
         <h2>Manage your choices</h2>
         <p>Use Manage Cookies here or in the footer to change your choices for this site in your current browser.</p>
         <ManageCookiesButton className={styles.manageCookies} />

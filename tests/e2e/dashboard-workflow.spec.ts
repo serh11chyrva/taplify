@@ -44,7 +44,7 @@ test("creates, publishes, archives, and restores a page", async ({ context, brow
   const creation = page.waitForResponse((response) => response.url().endsWith(`/api/organizations/${organizationId}/pages`) && response.request().method() === "POST");
   await page.getByRole("button", { name: "Create draft" }).click();
   const created = await creation;
-  expect(created.status(), await created.text()).toBe(201);
+  expect(created.status()).toBe(201);
   await expect(page).toHaveURL(/\/editor$/);
   const pageId = new URL(page.url()).pathname.split("/")[4];
   const privatePath = `/dashboard/${organizationId}/pages/${pageId}`;

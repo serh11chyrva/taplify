@@ -13,7 +13,7 @@ export default function PrivacyPolicyPage() {
   return (
     <>
       <h1>Privacy Policy</h1>
-      <p className={styles.updated}>Last updated <time dateTime="2026-11-27">November 27, 2026</time></p>
+      <p className={styles.updated}>Last updated <time dateTime="2026-11-28">November 28, 2026</time></p>
       <p>This policy explains how the Taplify demo handles personal data when you visit, sign in, or contact us.</p>
 
       <section>
@@ -56,6 +56,16 @@ export default function PrivacyPolicyPage() {
           </p>
         </section>
       )}
+
+      <section>
+        <h2>Reports for page owners</h2>
+        <p>
+          If you allow page analytics, Taplify records views and link clicks on published pages, the referring
+          domain, and supported campaign labels. Taplify uses a browser identifier scoped to the organization
+          in stored events and keeps those events for up to 90 days. Successful form submissions are counted
+          in reports. You can withdraw measurement consent from Page analytics settings on a published page.
+        </p>
+      </section>
 
       <section>
         <h2>Contact forms on published pages</h2>

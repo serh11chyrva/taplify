@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -174,12 +175,13 @@ export function CookieConsentProvider({ children, copy, measurementId }: {
   const consent = useSyncExternalStore(store.subscribe, store.getSnapshot, () => undefined);
   const [trigger, setTrigger] = useState<HTMLButtonElement | null>(null);
   const analyticsAvailable = measurementId !== null;
+  const publicPage = usePathname().startsWith("/p/");
 
   return (
     <OpenPreferences.Provider value={setTrigger}>
       {children}
-      {consent === null && <CookieBanner analyticsAvailable={analyticsAvailable} copy={copy} save={store.save} />}
-      {trigger && (
+      {!publicPage && consent === null && <CookieBanner analyticsAvailable={analyticsAvailable} copy={copy} save={store.save} />}
+      {!publicPage && trigger && (
         <CookiePreferences
           analyticsAvailable={analyticsAvailable}
           consent={consent}

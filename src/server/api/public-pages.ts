@@ -1,12 +1,38 @@
 import "server-only";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
+import { z } from "zod";
+import { pageAnalyticsCookie, pageAnalyticsDeclineCookie, pageAnalyticsSeconds } from "@/lib/dashboard/analytics-consent";
 import { publishedImage } from "@/server/dashboard/publication";
 import { acceptSubmission, liveForm } from "@/server/dashboard/submissions";
-import { DashboardError } from "@/server/dashboard/errors";
+import { DashboardError, missingResource, validate } from "@/server/dashboard/errors";
+import { consentedBrowser, createAnalyticsCookie } from "@/server/dashboard/analytics-consent";
+import { dashboardFeatures } from "@/server/dashboard/features";
 import { checkWriteOrigin, jsonBody } from "./dashboard";
 
 export const publicPagesApi = new Hono().basePath("/public/pages");
+
+publicPagesApi.post("/consent", bodyLimit({ maxSize: 512 }), async (c) => {
+  checkWriteOrigin(c.req.raw);
+  if (!dashboardFeatures().analytics) throw missingResource();
+  const { granted } = validate(z.object({ granted: z.boolean() }), await jsonBody(c.req.raw));
+  const options = {
+    path: "/", httpOnly: true, sameSite: "Lax" as const, secure: new URL(c.req.url).protocol === "https:",
+  };
+  if (granted) {
+    const existing = getCookie(c, pageAnalyticsCookie);
+    if (!consentedBrowser(existing)) {
+      setCookie(c, pageAnalyticsCookie, createAnalyticsCookie(), { ...options, maxAge: pageAnalyticsSeconds });
+    }
+    deleteCookie(c, pageAnalyticsDeclineCookie, options);
+  } else {
+    deleteCookie(c, pageAnalyticsCookie, options);
+    setCookie(c, pageAnalyticsDeclineCookie, "1", { ...options, maxAge: pageAnalyticsSeconds });
+  }
+  c.header("Cache-Control", "no-store");
+  return c.json({ granted });
+});
 
 publicPagesApi.get("/:slug/media/:assetId", (c) => publishedImage(c.req.param("slug"), c.req.param("assetId")));
 publicPagesApi.get("/:slug/form", async (c) => {
