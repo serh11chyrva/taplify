@@ -13,6 +13,7 @@ try {
   );
   await db.collection("organization_memberships").createIndex({ organizationId: 1, userId: 1 }, { unique: true });
   await db.collection("organization_memberships").createIndex({ userId: 1, organizationId: 1 });
+  await db.collection("pages").createIndex({ organizationId: 1, archivedAt: 1, updatedAt: -1, _id: 1 });
   console.log("Application indexes created");
 } catch {
   console.error("Index creation failed. Check database access and existing indexes.");
