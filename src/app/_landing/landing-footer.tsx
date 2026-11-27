@@ -5,6 +5,7 @@ import { COOKIE_POLICY_PATH } from "@/lib/cookie-consent";
 import { getSiteMessages } from "@/lib/i18n/messages";
 import { getSitePreferences } from "@/server/site-preferences";
 import styles from "../landing.module.css";
+import { FooterColumns } from "./footer-columns";
 import { FooterSocials } from "./footer-socials";
 import { LanguageMenu } from "./language-menu";
 import { productLinks } from "./products";
@@ -23,7 +24,7 @@ function FooterLink({ label, marker, href, prefetch }: FooterLinkItem) {
   const content = (
     <>
       <span>{label}{marker && <sup>{marker}</sup>}</span>
-      <ArrowUpRight className={styles.footerLinkIcon} aria-hidden="true" />
+      <ArrowUpRight className={styles.footerLinkIcon} viewBox="4 4 16 16" aria-hidden="true" />
     </>
   );
 
@@ -46,10 +47,11 @@ function FooterLink({ label, marker, href, prefetch }: FooterLinkItem) {
 export async function LandingFooter() {
   const { theme, language, locale } = await getSitePreferences();
   const { landing, footer, cookies, preferences } = getSiteMessages(locale);
-  const footerColumns: { title: string; links: FooterItem[] }[][] = [
+  const footerColumns: { title: string; links: FooterItem[]; mobileFirstRow?: boolean }[][] = [
     [
       {
         title: "Taplify",
+        mobileFirstRow: true,
         links: [
           { label: footer.home, href: "/" },
           { label: landing.pricing, marker: "**" },
@@ -61,6 +63,7 @@ export async function LandingFooter() {
     ],
     [{
       title: footer.developers,
+      mobileFirstRow: true,
       links: [
         { label: "GitHub", href: "https://github.com/serh11chyrva/taplify" },
         ...placeholders([footer.documentation, "API", footer.integrations, footer.webhooks]),
@@ -89,11 +92,11 @@ export async function LandingFooter() {
   return (
     <footer className={styles.footer}>
       <ScrollReveal className={styles.container}>
-        <div className={styles.footerColumns}>
+        <FooterColumns>
           {footerColumns.map((column) => (
             <div className={styles.footerColumn} key={column[0].title}>
-              {column.map(({ title, links }) => (
-                <div key={title}>
+              {column.map(({ title, links, mobileFirstRow }) => (
+                <div key={title} className={mobileFirstRow ? styles.footerFirstRow : undefined}>
                   <h2>{title}</h2>
                   <ul role="list">
                     {links.map((item) => (
@@ -109,7 +112,7 @@ export async function LandingFooter() {
             </div>
           ))}
           <FooterSocials title={footer.social} />
-        </div>
+        </FooterColumns>
         <div className={styles.footerNotes}>
           <p>* {footer.starredProducts}</p>
           <p>** {footer.placeholderLinks}</p>

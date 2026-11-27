@@ -142,21 +142,21 @@ test("fits the navigation, footer columns, and link arrows on a narrow screen", 
   await expect(toggle).toBeFocused();
 
   const footer = page.getByRole("contentinfo");
-  const columns = footer.getByRole("heading", { name: /^(Taplify|Developers|Legal|Social)$/ });
-  await expect(columns).toHaveCount(4);
-  const [first, second, third, fourth] = await columns.evaluateAll((headings) => headings.map((heading) => {
-    const { x, y } = heading.getBoundingClientRect();
-    return { x, y };
-  }));
-  expect(second.x).toBeGreaterThan(first.x);
-  expect(second.y).toBe(first.y);
-  expect(third.x).toBe(first.x);
-  expect(third.y).toBeGreaterThan(first.y);
-  expect(fourth.x).toBe(second.x);
-  expect(fourth.y).toBe(third.y);
+  const headings = await footer.getByRole("heading").evaluateAll((elements) => elements
+    .map((element) => {
+      const { x, y } = element.getBoundingClientRect();
+      return { title: element.textContent, x, y };
+    })
+    .sort((a, b) => a.y - b.y || a.x - b.x));
+  expect(headings.map(({ title }) => title)).toEqual(["Taplify", "Developers", "Products", "Legal", "Cookie", "Social"]);
+  for (let row = 0; row < headings.length; row += 2) {
+    expect(headings[row + 1].y).toBe(headings[row].y);
+    expect(headings[row + 1].x).toBeGreaterThan(headings[row].x);
+  }
 
   const link = footer.getByRole("link", { name: "Company Information**", exact: true });
   const arrow = link.locator("svg");
+  await expect(arrow).toHaveCSS("opacity", "0");
   await link.hover();
   await expect(arrow).toHaveCSS("opacity", "1");
   await expect(arrow).toHaveCSS("width", "14px");
@@ -168,6 +168,28 @@ test("fits the navigation, footer columns, and link arrows on a narrow screen", 
   await toggle.click();
   await dialog.getByRole("link", { name: "Sign Up", exact: true }).click();
   await expect(page).toHaveURL("/login");
+});
+
+test.describe("touch footer", () => {
+  test.use({ hasTouch: true, isMobile: true, viewport: { width: 375, height: 812 } });
+
+  test("shows the arrow during touch press and focus", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Reject optional" }).click();
+    const footer = page.getByRole("contentinfo");
+    const link = footer.getByRole("link", { name: "GitHub", exact: true });
+    const arrow = link.locator("svg");
+    const touch = { pointerType: "touch", isPrimary: true };
+    await expect(arrow).toHaveCSS("opacity", "0");
+    await link.dispatchEvent("pointerdown", touch);
+    await expect(arrow).toHaveCSS("opacity", "1");
+    await link.dispatchEvent("pointercancel", touch);
+    await expect(arrow).toHaveCSS("opacity", "0");
+    await link.focus();
+    await expect(arrow).toHaveCSS("opacity", "1");
+    await link.blur();
+    await expect(arrow).toHaveCSS("opacity", "0");
+  });
 });
 
 test("reveals a block once a fifth of it is in view", async ({ page }) => {

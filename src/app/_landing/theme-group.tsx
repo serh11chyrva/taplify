@@ -19,7 +19,7 @@ export function ThemeGroup({ value, copy }: {
 
   return (
     <div className={styles.preference}>
-      <ButtonGroup aria-label={copy.theme} aria-busy={pending}>
+      <ButtonGroup className={styles.themeGroup} aria-label={copy.theme} aria-busy={pending}>
         {themes.map((theme) => {
           const Icon = icons[theme];
           return (

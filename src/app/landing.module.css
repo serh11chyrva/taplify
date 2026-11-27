@@ -97,7 +97,7 @@
 
 .headerLink:is(:hover, :focus-visible),
 .productLink:is(:hover, :focus-visible),
-.footerLink:any-link:is(:hover, :focus-visible, :active),
+.footerLink:any-link:is(:hover, :focus, :active, [data-touch-pressed]) > span,
 button.footerLink:is(:hover, :focus-visible, :active) {
   text-decoration-line: underline;
   text-underline-offset: 0.22em;
@@ -594,7 +594,7 @@ button.footerLink {
   text-align: start;
 }
 
-.footerLink:is(:hover, :focus-visible, :active) {
+.footerLink:is(:hover, :focus, :active, [data-touch-pressed]) {
   color: var(--landing-text);
 }
 
@@ -606,12 +606,12 @@ button.footerLink {
   opacity: 0;
 }
 
-.footerLink:is(:hover, :focus-visible, :active) .footerLinkIcon {
+.footerLink:is(:focus, :active, [data-touch-pressed]) .footerLinkIcon {
   opacity: 1;
 }
 
-@media (hover: none) {
-  .footerLink:any-link .footerLinkIcon {
+@media (any-hover: hover) {
+  .footerLink:hover .footerLinkIcon {
     opacity: 1;
   }
 }
@@ -799,6 +799,14 @@ button.footerLink {
     row-gap: 1.5rem;
     column-gap: clamp(0.75rem, 4vw, 1.5rem);
   }
+
+  .footerColumn {
+    display: contents;
+  }
+
+  .footerFirstRow {
+    order: -1;
+  }
 }
 
 @media (width <= 40rem) {
@@ -886,6 +894,39 @@ button.footerLink {
 @media (width <= 33rem) {
   .footerColumns ul {
     font-size: 0.8125rem;
+  }
+
+  .footerBottom,
+  .footerPreferences {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .footerPreferences {
+    display: grid;
+  }
+
+  .languageTrigger,
+  .languageMenu,
+  .themeGroup {
+    inline-size: 100%;
+  }
+
+  .languageTrigger {
+    min-block-size: 2.75rem;
+    border: 1px solid var(--preference-border);
+  }
+
+  .languageTrigger .languageChevron {
+    margin-inline-start: auto;
+  }
+
+  .languageMenu {
+    min-inline-size: 0;
+  }
+
+  .themeButton {
+    min-block-size: 2.75rem;
+    flex: 1;
   }
 }
 

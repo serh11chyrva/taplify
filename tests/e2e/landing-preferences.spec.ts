@@ -63,9 +63,12 @@ test.describe("landing language", () => {
       language.boundingBox(),
     ]);
     if (!copyright || !themeControl || !languageControl) throw new Error("The footer controls are missing.");
-    expect(themeControl.x).toBeGreaterThanOrEqual(copyright.x + copyright.width);
-    expect(languageControl.x).toBeGreaterThanOrEqual(copyright.x + copyright.width);
-    expect(languageControl.y < themeControl.y || languageControl.x < themeControl.x).toBe(true);
+    expect(languageControl.y).toBeGreaterThanOrEqual(copyright.y + copyright.height);
+    expect(themeControl.y).toBeGreaterThanOrEqual(languageControl.y + languageControl.height);
+    for (const control of [languageControl, themeControl]) {
+      expect(control.x).toBeCloseTo(copyright.x);
+      expect(control.width).toBeCloseTo(copyright.width);
+    }
 
     await language.press("Enter");
     const automatic = menu.getByRole("menuitemradio", { name: "Automatique" });
