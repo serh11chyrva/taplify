@@ -16,7 +16,7 @@ export function SignOut() {
     try {
       const result = await authClient.signOut();
       if (result.error) throw new Error("Sign-out failed");
-      router.replace("/login");
+      router.replace("/sign-in");
       router.refresh();
     } catch {
       setError(true);

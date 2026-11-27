@@ -13,7 +13,7 @@ app.use("*", requestId(), secureHeaders());
 app.get("/health", (c) => c.json(getHealth()));
 app.on(["GET", "POST"], "/auth/*", async (c) => {
   if (!isAuthConfigured()) {
-    return c.json({ error: { code: "AUTH_NOT_CONFIGURED", message: "Sign-in is not configured." } }, 503);
+    return c.json({ error: { code: "AUTH_NOT_CONFIGURED", message: "Authentication is not configured." } }, 503);
   }
   const auth = await getAuth();
   return auth.handler(c.req.raw);

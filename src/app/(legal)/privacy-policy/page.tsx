@@ -13,8 +13,17 @@ export default function PrivacyPolicyPage() {
   return (
     <>
       <h1>Privacy Policy</h1>
-      <p className={styles.updated}>Last updated <time dateTime="2026-11-26">November 26, 2026</time></p>
+      <p className={styles.updated}>Last updated <time dateTime="2026-11-27">November 27, 2026</time></p>
       <p>This policy explains how the Taplify demo handles personal data when you visit, sign in, or contact us.</p>
+
+      <section>
+        <h2>Email and password</h2>
+        <p>
+          When you register with an email address and password, Taplify uses your email address to
+          identify your account and the part before @ as your account name. Taplify stores these
+          details and a password hash in MongoDB to verify future sign-ins.
+        </p>
+      </section>
 
       <section>
         <h2>Google sign-in</h2>

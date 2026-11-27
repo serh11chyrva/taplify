@@ -35,7 +35,7 @@ export default async function HomePage() {
             <h1 id="landing-title" className={styles.title}>{landing.heroFirstLine}<br />{landing.heroSecondLine}</h1>
             <p className={styles.description}>{landing.heroDescription}</p>
             <Button asChild variant="outline" size="lg" className={styles.cta}>
-              <Link href="/login">{landing.heroCta}</Link>
+              <Link href="/sign-up">{landing.heroCta}</Link>
             </Button>
           </div>
         </section>

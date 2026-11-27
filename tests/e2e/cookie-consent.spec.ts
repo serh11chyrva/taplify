@@ -52,7 +52,7 @@ test("shows the cookie banner and remembers a confirmation without GA4", async (
   const analytics = await interceptAnalytics(context);
   const banner = page.getByRole("region", { name: "Cookies on Taplify" });
 
-  for (const path of ["/", "/login", COOKIE_POLICY_PATH, "/unknown-cookie-test-page"]) {
+  for (const path of ["/", "/sign-in", "/sign-up", COOKIE_POLICY_PATH, "/unknown-cookie-test-page"]) {
     await page.goto(path);
     const footer = page.getByRole("contentinfo");
     await expect(footer.getByRole("link", { name: "Cookie Policy" })).toHaveAttribute("href", COOKIE_POLICY_PATH);
@@ -74,7 +74,7 @@ test("shows the cookie banner and remembers a confirmation without GA4", async (
   await expect(banner).toBeHidden();
   const savedChoice = await page.evaluate((key) => JSON.parse(window.localStorage.getItem(key) ?? "null"), COOKIE_CONSENT_KEY);
   expect(savedChoice).toMatchObject({ version: COOKIE_CONSENT_VERSION, analytics: null });
-  await page.goto("/login");
+  await page.goto("/sign-in");
   await expect(banner).toBeHidden();
   await page.getByRole("contentinfo").getByRole("button", { name: "Manage Cookies" }).click();
   await expect(preferences.getByText("Always active")).toBeVisible();
@@ -87,7 +87,7 @@ test.describe("cookie consent with GA4 configured", () => {
   test("offers a keyboard-accessible choice on mobile and keeps a refusal across pages", async ({ page, context }) => {
     const analytics = await interceptAnalytics(context);
     await page.setViewportSize({ width: 320, height: 568 });
-    await page.goto("/login");
+    await page.goto("/sign-in");
     const banner = page.getByRole("region", { name: "Cookies on Taplify" });
     await expect(banner).toBeVisible();
     const bounds = await banner.evaluate((element) => {
@@ -122,7 +122,7 @@ test.describe("cookie consent with GA4 configured", () => {
   test("starts after consent, counts client-side views, and stops after revocation across tabs", async ({ page, context }) => {
     const analytics = await interceptAnalytics(context);
     const secondTab = await context.newPage();
-    await page.goto("/login?error=example#details");
+    await page.goto("/sign-in?error=example#details");
     await secondTab.goto(COOKIE_POLICY_PATH);
     const origin = new URL(page.url()).origin;
     const banner = page.getByRole("region", { name: "Cookies on Taplify" });
@@ -134,13 +134,17 @@ test.describe("cookie consent with GA4 configured", () => {
     await banner.getByRole("button", { name: "Accept all" }).click();
     await expect(secondBanner).toBeHidden();
     await expect.poll(() => analytics.views().sort()).toEqual([
-      `${origin}${COOKIE_POLICY_PATH}`, `${origin}/login`,
+      `${origin}${COOKIE_POLICY_PATH}`, `${origin}/sign-in`,
     ]);
     expect(analytics.tagLoads().map((url) => url.searchParams.get("id"))).toEqual([ga4MeasurementId, ga4MeasurementId]);
 
-    await page.getByRole("contentinfo").getByRole("link", { name: "Cookie Policy" }).click();
+    await page.getByRole("main").getByRole("link", { name: "Sign up", exact: true }).click();
     await expect.poll(analytics.views).toHaveLength(3);
-    expect(analytics.views()[2]).toBe(`${origin}${COOKIE_POLICY_PATH}`);
+    expect(analytics.views()[2]).toBe(`${origin}/sign-up`);
+
+    await page.getByRole("contentinfo").getByRole("link", { name: "Cookie Policy" }).click();
+    await expect.poll(analytics.views).toHaveLength(4);
+    expect(analytics.views()[3]).toBe(`${origin}${COOKIE_POLICY_PATH}`);
     expect(analytics.tagLoads()).toHaveLength(2);
 
     await context.addCookies([{ name: "better-auth.state", value: "test-state", url: origin, httpOnly: true }]);
@@ -161,7 +165,7 @@ test.describe("cookie consent with GA4 configured", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Privacy Policy" })).toBeVisible();
     await page.reload();
     await expect(banner).toBeHidden();
-    expect(analytics.views()).toHaveLength(3);
+    expect(analytics.views()).toHaveLength(4);
     expect(analytics.tagLoads()).toHaveLength(2);
   });
 
@@ -201,7 +205,7 @@ test.describe("cookie consent with GA4 configured", () => {
       };
     }, COOKIE_CONSENT_KEY);
 
-    await page.goto("/login");
+    await page.goto("/sign-in");
     const banner = page.getByRole("region", { name: "Cookies on Taplify" });
     await banner.getByRole("button", { name: "Accept all" }).click();
     await expect(banner.getByRole("alert")).toContainText("Your preferences could not be saved");

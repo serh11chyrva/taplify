@@ -29,10 +29,10 @@ function HeaderMenu({ copy, onNavigate }: { copy: HeaderCopy; onNavigate?: () =>
       </nav>
       <div className={styles.headerActions}>
         <Button asChild variant="ghost" className={styles.signIn}>
-          <Link href="/login" onNavigate={onNavigate}>{copy.signIn}</Link>
+          <Link href="/sign-in" onNavigate={onNavigate}>{copy.signIn}</Link>
         </Button>
         <Button asChild variant="outline" className={styles.signUp}>
-          <Link href="/login" onNavigate={onNavigate}>{copy.signUp}</Link>
+          <Link href="/sign-up" onNavigate={onNavigate}>{copy.signUp}</Link>
         </Button>
       </div>
     </>

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("opens the landing page and sign-in screen", async ({ page }) => {
+test("opens the landing page and authentication screens", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/One link\.\s*Your whole story\./);
@@ -101,12 +101,55 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
   await expect(copyright.locator("svg")).toBeVisible();
   await expect(footer.getByRole("link", { name: "Vercel", exact: true })).toHaveCount(0);
 
-  for (const name of ["Sign In", "Sign Up", "Create your first page"]) {
+  for (const [name, path] of [
+    ["Sign In", "/sign-in"],
+    ["Sign Up", "/sign-up"],
+    ["Create your first page", "/sign-up"],
+  ]) {
     await page.getByRole("link", { name, exact: true }).click();
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(path);
     await expect(page.getByRole("button", { name: "Continue with Google" })).toBeVisible();
     await page.goBack();
   }
+});
+
+test("shows the email forms and account terms on mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
+  await page.goto("/login?error=access_denied");
+  await expect(page).toHaveURL("/sign-in?error=access_denied");
+  await page.getByRole("button", { name: "Reject optional" }).click();
+
+  const main = page.getByRole("main");
+  const signIn = main.getByRole("region", { name: "Sign in" });
+  const google = main.getByRole("button", { name: "Continue with Google" });
+  await expect(main.getByRole("link", { name: "Taplify", exact: true }).locator("svg")).toBeVisible();
+  await expect(main.getByLabel("Email", { exact: true })).toHaveAttribute("type", "email");
+  await expect(main.getByLabel("Password", { exact: true })).toHaveAttribute("autocomplete", "current-password");
+  await expect(google).toHaveAccessibleDescription(/If you create an account with Google/);
+  await expect(main.getByRole("alert")).toHaveText("Unable to continue with Google. Please try again.");
+  await expect(signIn).toHaveCSS("background-color", "rgb(255, 255, 255)");
+
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(signIn).toHaveCSS("background-color", "rgb(24, 23, 28)");
+  await main.getByRole("link", { name: "Sign up", exact: true }).click();
+  await expect(page).toHaveURL("/sign-up");
+  await expect(main.getByRole("heading", { name: "Create an account", level: 1 })).toBeVisible();
+  const password = main.getByLabel("Password", { exact: true });
+  await expect(password).toHaveAttribute("autocomplete", "new-password");
+  await expect(password).toHaveAttribute("minlength", "8");
+  await expect(main.getByRole("link", { name: "Terms of Service" })).toHaveAttribute("href", "/terms-of-service");
+  await expect(main.getByRole("link", { name: "Privacy Policy" })).toHaveAttribute("href", "/privacy-policy");
+  for (const action of [google, main.getByRole("button", { name: "Create account" })]) {
+    await expect(action).toHaveAccessibleDescription(/By creating an account, you agree to the Terms of Service and acknowledge the Privacy Policy/);
+  }
+  await expect(page.getByRole("contentinfo").getByRole("group", { name: "Theme" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+
+  await main.getByRole("link", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL("/sign-in");
+  await main.getByRole("link", { name: "Back to Taplify" }).click();
+  await expect(page).toHaveURL("/");
 });
 
 test("fits the navigation, footer columns, and link arrows on a narrow screen", async ({ page }) => {
@@ -167,7 +210,7 @@ test("fits the navigation, footer columns, and link arrows on a narrow screen", 
 
   await toggle.click();
   await dialog.getByRole("link", { name: "Sign Up", exact: true }).click();
-  await expect(page).toHaveURL("/login");
+  await expect(page).toHaveURL("/sign-up");
 });
 
 test.describe("touch footer", () => {
@@ -258,7 +301,7 @@ test("opens Licenses from the footer and serves its notices", async ({ page, req
 
 test("protects the dashboard from anonymous visitors", async ({ page }) => {
   await page.goto("/dashboard");
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL("/sign-in");
 });
 
 test("executes Typegoose in the production API route", async ({ request }) => {

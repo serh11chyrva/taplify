@@ -8,7 +8,7 @@ import type { ConsentStore } from "./consent-store";
 import { prepareGoogleTag, recordGoogleAnalyticsPage } from "./google-tag";
 
 const measuredPaths = new Set([
-  "/", "/dashboard", "/licenses", "/login", "/privacy-policy", "/terms-of-service", COOKIE_POLICY_PATH,
+  "/", "/dashboard", "/licenses", "/privacy-policy", "/sign-in", "/sign-up", "/terms-of-service", COOKIE_POLICY_PATH,
 ]);
 
 export function TaplifyAnalytics({

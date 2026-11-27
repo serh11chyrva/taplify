@@ -2,7 +2,7 @@
 
 A small SaaS for public link pages, portfolios, contact forms, leads, and analytics.
 
-This bootstrap implements the technical foundation from the general MVP plan. It includes a landing page, Google sign-in wiring, a session-protected dashboard shell, a Hono API, MongoDB connection helpers, a representative Typegoose model, and a Vercel Blob adapter. Taplify can use Google Analytics to measure visits with visitor consent. Page creation, editing, publishing, forms, leads, and analytics for page owners are future phases.
+This bootstrap implements the technical foundation from the general MVP plan. It includes a landing page, email and Google authentication, a session-protected dashboard shell, a Hono API, MongoDB connection helpers, a representative Typegoose model, and a Vercel Blob adapter. Taplify can use Google Analytics to measure visits with visitor consent. Page creation, editing, publishing, forms, leads, and analytics for page owners are future phases.
 
 ## Local development
 
@@ -16,7 +16,7 @@ pnpm dev
 
 On PowerShell, use `Copy-Item .env.example .env.local` instead of `cp`.
 
-Open [localhost:3000](http://localhost:3000). The landing page and health endpoint work without external services. Sign-in is disabled until its configuration is valid. Database and authentication configuration is validated lazily on the server using Zod, so a production build does not need credentials or a reachable database.
+Open [localhost:3000](http://localhost:3000). The landing page and health endpoint work without external services. Configure MongoDB and Better Auth to enable registration and sign-in by email and password. Database and authentication configuration is validated lazily on the server using Zod, so a production build does not need credentials or a reachable database.
 
 ## Environment
 
@@ -26,8 +26,8 @@ Open [localhost:3000](http://localhost:3000). The landing page and health endpoi
 | `MONGODB_DB_NAME` | Database name, defaults to `taplify`. |
 | `BETTER_AUTH_SECRET` | Random secret of at least 32 characters. |
 | `BETTER_AUTH_URL` | Exact application origin, e.g. `http://localhost:3000`. |
-| `GOOGLE_CLIENT_ID` | Google OAuth web application client ID. |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret. |
+| `GOOGLE_CLIENT_ID` | Optional Google OAuth web application client ID. Set with the Google client secret to enable Google authentication. |
+| `GOOGLE_CLIENT_SECRET` | Optional Google OAuth client secret. |
 | `NEXT_PUBLIC_GA4_MEASUREMENT_ID` | Optional GA4 web stream ID (`G-…`). Set it before building. |
 | `BLOB_READ_WRITE_TOKEN` | Token for a public Vercel Blob store; required only for image storage. |
 
@@ -37,9 +37,11 @@ Generate an auth secret with:
 node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
 ```
 
-Create a Google OAuth **Web application** client. Register `http://localhost:3000` as an authorized JavaScript origin and `http://localhost:3000/api/auth/callback/google` as an authorized redirect URI. Add the equivalent production origin and callback for a stable deployment domain. Set `BETTER_AUTH_URL` to that same origin. See the [Better Auth Google guide](https://better-auth.com/docs/authentication/google).
+To enable Google authentication, create a Google OAuth **Web application** client. Register `http://localhost:3000` as an authorized JavaScript origin and `http://localhost:3000/api/auth/callback/google` as an authorized redirect URI. Add the equivalent production origin and callback for a stable deployment domain. Set `BETTER_AUTH_URL` to that same origin. See the [Better Auth Google guide](https://better-auth.com/docs/authentication/google).
 
-Better Auth owns accounts, users, verification records, and sessions through its [MongoDB adapter](https://better-auth.com/docs/adapters/mongo). There is no Typegoose User model. The auth adapter receives the MongoClient to enable transactions; for local OAuth testing, use Atlas or a local replica set instead of a standalone MongoDB instance.
+Users can sign in at `/sign-in` and register at `/sign-up`. Email registration starts a session immediately. Google can create an account from either page.
+
+Better Auth owns accounts, users, verification records, and sessions through its [MongoDB adapter](https://better-auth.com/docs/adapters/mongo). There is no Typegoose User model. The auth adapter receives the MongoClient to enable transactions. Use Atlas or a local replica set to exercise account creation.
 
 ## Cookie consent and analytics
 
@@ -56,7 +58,7 @@ src/
   app/                        Next.js App Router pages and layouts
     api/[[...route]]/route.ts  Node.js entry point for /api/*
     dashboard/                Session-protected dashboard shell
-    login/                    Google sign-in screen
+    (auth)/                   Sign-in and registration pages with a shared layout
   components/
     auth/                     Client sign-in and sign-out controls
     ui/                       shadcn-style components
@@ -109,7 +111,7 @@ pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 
-Playwright starts the **production** server, so build first. The smoke suite covers the landing/sign-in screens, the anonymous dashboard redirect, and model execution through Hono. It does not perform Google OAuth. Verify real OAuth separately on a stable registered deployment URL. Add database integration tests with an isolated test database when page access and publishing services are introduced.
+Playwright starts the **production** server, so build first. The smoke suite covers the landing and authentication screens, the anonymous dashboard redirect, and model execution through Hono. Verify Google OAuth separately on a stable registered deployment URL. Add database integration tests with an isolated test database when page access and publishing services are introduced.
 
 To use an installed Chrome instead of downloading Chromium, set `PLAYWRIGHT_CHANNEL=chrome` (PowerShell: `$env:PLAYWRIGHT_CHANNEL = "chrome"`) before `pnpm test:e2e`.
 
@@ -126,4 +128,4 @@ Mongoose automatic index creation is disabled. `db:indexes` additively creates t
 
 Import this repository into a single Vercel project with the **Next.js** preset, Node.js **24.x**, install command `pnpm install --frozen-lockfile`, and build command `pnpm build`. Add the environment variables above to the appropriate environments, configure Atlas network access, and connect a public Blob store. All database/API code uses the Node.js runtime.
 
-After deployment, check `/api/health`, Google sign-in and sign-out, the dashboard redirect, Atlas connectivity, and index creation. Use Vercel request/function logs for diagnostics while keeping form answers and secrets out of logs. A real deployment requires your Vercel, Atlas, Google, and Blob credentials and has not been provisioned by this bootstrap.
+After deployment, check `/api/health`, email registration and sign-in, Google sign-in if configured, sign-out, the dashboard redirect, Atlas connectivity, and index creation. Use Vercel request/function logs for diagnostics while keeping form answers and secrets out of logs.
