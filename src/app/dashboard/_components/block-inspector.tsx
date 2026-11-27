@@ -145,7 +145,7 @@ export function BlockInspector({ block, onChange, organizationId, onBusy }: {
       return <>
         <TextField label="Title" value={block.title} maxLength={120} onChange={(title) => onChange({ ...block, title })} />
         <RepeatableItems label="Social link" items={block.items} limit={15} onChange={(items) => onChange({ ...block, items })}
-          create={() => ({ id: crypto.randomUUID(), network: "Instagram", url: "" })}>
+          create={() => ({ id: crypto.randomUUID(), network: "Instagram" as const, url: "" })}>
           {(item, update) => <>
             <label className="grid gap-1.5 text-sm">Network
               <select className="dashboard-input" value={item.network}

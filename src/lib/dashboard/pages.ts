@@ -23,7 +23,7 @@ export function pageApiPath(organizationId: string, pageId: string) {
   return `${organizationApiPath(organizationId)}/pages/${pageId}`;
 }
 
-export function directoryFilters(search: DashboardSearch) {
+export function directoryFilters(search: DashboardSearch): { q: string; status?: PageStatus; page: number } {
   const q = typeof search.q === "string" ? search.q.trim().slice(0, 100) : "";
   const { status } = search;
   const page = Number(typeof search.page === "string" ? search.page : 1);
