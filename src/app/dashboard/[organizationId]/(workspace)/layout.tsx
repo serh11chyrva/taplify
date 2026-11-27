@@ -3,6 +3,7 @@ import { listOrganizations } from "@/server/dashboard/organizations";
 import { workspace } from "@/server/dashboard/read";
 import { sidebarPages } from "@/server/dashboard/pages";
 import { dashboardFeatures } from "@/server/dashboard/features";
+import { organizationCan } from "@/lib/dashboard/organizations";
 
 export default async function WorkspaceLayout({ children, params }: {
   children: React.ReactNode;
@@ -14,5 +15,6 @@ export default async function WorkspaceLayout({ children, params }: {
     listOrganizations(user.id), sidebarPages(user.id, organizationId),
   ]);
   return <DashboardFrame organization={organization} organizations={organizations} projects={projects}
-    analytics={dashboardFeatures().analytics} account={{ name: user.name, email: user.email }}>{children}</DashboardFrame>;
+    analytics={dashboardFeatures().analytics && organizationCan(organization.role, "analytics:read")}
+    account={{ name: user.name, email: user.email }}>{children}</DashboardFrame>;
 }

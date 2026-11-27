@@ -4,6 +4,7 @@ import { PageRenderer } from "@/components/pages/page-renderer";
 import { pagePath } from "@/lib/dashboard/pages";
 import { organizationMediaPath } from "@/lib/dashboard/media";
 import { reportRange } from "@/lib/dashboard/analytics";
+import { organizationCan } from "@/lib/dashboard/organizations";
 import { PublicationStatus } from "@/app/dashboard/_components/page-directory";
 import { pageSummary, readDraft } from "@/server/dashboard/pages";
 import { dashboardRead, workspace } from "@/server/dashboard/read";
@@ -13,11 +14,13 @@ import { dashboardFeatures } from "@/server/dashboard/features";
 
 export default async function PageFocus({ params }: { params: Promise<{ organizationId: string; pageId: string }> }) {
   const { organizationId, pageId } = await params;
-  const { user } = await workspace(organizationId);
+  const { user, organization } = await workspace(organizationId);
   const page = await dashboardRead(() => pageSummary(user.id, organizationId, pageId));
   const [draft, analytics] = await dashboardRead(() => Promise.all([
-    page.status === "archived" ? null : readDraft(user.id, organizationId, pageId).then((result) => result.draft),
-    dashboardFeatures().analytics ? loadAnalytics(user.id, organizationId, reportRange({ range: "7" }), pageId) : null,
+    page.status !== "archived" && organizationCan(organization.role, "draft:write")
+      ? readDraft(user.id, organizationId, pageId).then((result) => result.draft) : null,
+    dashboardFeatures().analytics && organizationCan(organization.role, "analytics:read")
+      ? loadAnalytics(user.id, organizationId, reportRange({ range: "7" }), pageId) : null,
   ]));
   const address = pagePath(organizationId, pageId);
   return (
@@ -29,13 +32,15 @@ export default async function PageFocus({ params }: { params: Promise<{ organiza
       <div className="grid items-start gap-5 md:grid-cols-[1fr_minmax(17rem,23rem)]">
         <div className="space-y-4 rounded-xl border bg-surface p-5">
           <dl className="grid gap-1"><dt className="text-sm text-muted-foreground">Page type</dt><dd className="font-medium">{page.type}</dd></dl>
-          {draft && <div className="flex flex-wrap gap-2">
-            <Button asChild><Link href={`${address}/editor`}>Edit page</Link></Button>
-            <Button asChild variant="outline"><Link href={`${address}/preview`}>Preview</Link></Button>
+          <div className="flex flex-wrap gap-2">
+            {draft && <>
+              <Button asChild><Link href={`${address}/editor`}>Edit page</Link></Button>
+              <Button asChild variant="outline"><Link href={`${address}/preview`}>Preview</Link></Button>
+            </>}
             {page.status === "published" && page.slug && <Button asChild variant="outline">
               <a href={publicUrl(page.slug)} target="_blank" rel="noreferrer">View public page</a>
             </Button>}
-          </div>}
+          </div>
           {analytics && <section className="space-y-3 border-t pt-4">
             <h2 className="font-semibold">Last 7 days</h2>
             <dl className="grid grid-cols-2 gap-2 text-sm">

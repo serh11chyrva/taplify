@@ -1,9 +1,10 @@
 import "server-only";
 import { cache } from "react";
 import { notFound } from "next/navigation";
+import type { OrganizationPermission } from "@/lib/dashboard/organizations";
 import { DashboardError } from "./errors";
 import { dashboardFeatures } from "./features";
-import { requireOrganization, type OrganizationPermission } from "./organizations";
+import { requireOrganization } from "./organizations";
 import { requireDashboardSession } from "./session";
 
 export async function dashboardRead<T>(load: () => Promise<T>) {

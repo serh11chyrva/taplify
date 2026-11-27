@@ -16,8 +16,8 @@ import { AppearanceEditor } from "./appearance-editor";
 import { PublishButton } from "./publication-actions";
 import { FormEditor } from "./form-editor";
 
-export function PageEditor({ organizationId, page, draft: initial, revision: initialRevision, formsEnabled }: {
-  organizationId: string; page: PageSummary; draft: PageDraft; revision: number; formsEnabled: boolean;
+export function PageEditor({ organizationId, page, draft: initial, revision: initialRevision, formsEnabled, canPublish }: {
+  organizationId: string; page: PageSummary; draft: PageDraft; revision: number; formsEnabled: boolean; canPublish: boolean;
 }) {
   const router = useRouter();
   const pageId = page.id;
@@ -125,7 +125,7 @@ export function PageEditor({ organizationId, page, draft: initial, revision: ini
             <Button asChild variant="outline"><Link href={`${pagePath(organizationId, pageId)}/preview`}><Eye size={16} aria-hidden="true" /> Preview</Link></Button>}
           {conflict && <Button type="button" variant="outline" disabled={saving || uploading} onClick={() => void reload()}>Load latest draft</Button>}
           <Button type="button" disabled={!dirty || saving || uploading} onClick={() => void save()}>{saving ? "Saving…" : "Save draft"}</Button>
-          <PublishButton page={page} revision={revision} api={api} disabled={dirty || saving || uploading || conflict} />
+          {canPublish && <PublishButton page={page} revision={revision} api={api} disabled={dirty || saving || uploading || conflict} />}
         </div>
       </div>
       {feedback && <p role={feedback.error ? "alert" : "status"} className={feedback.error ? "text-sm text-danger" : "text-sm text-muted-foreground"}>{feedback.message}</p>}

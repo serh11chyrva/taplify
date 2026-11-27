@@ -1,13 +1,9 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { organizationInput, resourceId, type OrganizationSummary } from "@/lib/dashboard/organizations";
+import { organizationCan, organizationInput, resourceId, type OrganizationPermission, type OrganizationSummary } from "@/lib/dashboard/organizations";
 import { connectMongoose } from "@/server/db/mongoose";
 import { getMembershipModel, getOrganizationModel } from "@/server/db/models/organization";
 import { DashboardError, isDuplicateKey, missingResource, validate } from "./errors";
-
-export type OrganizationPermission =
-  | "workspace:read" | "workspace:manage" | "draft:write" | "page:publish"
-  | "leads:manage" | "leads:delete" | "leads:export" | "analytics:read";
 
 export async function requireOrganization(userId: string, organizationId: string, permission: OrganizationPermission = "workspace:read") {
   if (!resourceId.safeParse(organizationId).success) throw missingResource();
@@ -17,7 +13,7 @@ export async function requireOrganization(userId: string, organizationId: string
     getMembershipModel().findOne({ organizationId, userId }).lean(),
   ]);
   if (!organization || !member) throw missingResource();
-  if (permission !== "workspace:read" && member.role !== "owner") {
+  if (!organizationCan(member.role, permission)) {
     throw new DashboardError(403, "FORBIDDEN", "You do not have permission to perform this action.");
   }
   return {

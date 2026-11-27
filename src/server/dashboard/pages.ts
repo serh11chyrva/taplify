@@ -1,12 +1,12 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { resourceId } from "@/lib/dashboard/organizations";
+import { resourceId, type OrganizationPermission } from "@/lib/dashboard/organizations";
 import { createPageInput, draftAssetIds, draftInput, draftSchema, initialDraft } from "@/lib/dashboard/draft";
 import { pageForm } from "@/lib/dashboard/forms";
 import { escapeRegex, type directoryFilters, type PageSummary } from "@/lib/dashboard/pages";
 import { getPageModel, type TaplifyPage } from "@/server/db/models/page";
 import { DashboardError, isDuplicateKey, missingResource, validate } from "./errors";
-import { requireOrganization, type OrganizationPermission } from "./organizations";
+import { requireOrganization } from "./organizations";
 import { checkMediaReferences } from "./media";
 import { dashboardFeatures } from "./features";
 

@@ -3,18 +3,19 @@ import { pagePath } from "@/lib/dashboard/pages";
 import { pageSummary } from "@/server/dashboard/pages";
 import { dashboardRead, workspace } from "@/server/dashboard/read";
 import { dashboardFeatures } from "@/server/dashboard/features";
+import { organizationCan } from "@/lib/dashboard/organizations";
 
 export default async function ProjectLayout({ params, children }: {
   params: Promise<{ organizationId: string; pageId: string }>; children: React.ReactNode;
 }) {
   const { organizationId, pageId } = await params;
-  const { user } = await workspace(organizationId);
+  const { user, organization } = await workspace(organizationId);
   const page = await dashboardRead(() => pageSummary(user.id, organizationId, pageId));
   const tabs = [{ label: "Focus", segment: "focus" }];
-  if (page.status !== "archived") tabs.push({ label: "Editor", segment: "editor" });
+  if (page.status !== "archived" && organizationCan(organization.role, "draft:write")) tabs.push({ label: "Editor", segment: "editor" });
   const features = dashboardFeatures();
-  if (features.forms) tabs.push({ label: "Leads", segment: "leads" });
-  if (features.analytics) tabs.push({ label: "Analytics", segment: "analytics" });
-  tabs.push({ label: "Settings", segment: "settings" });
+  if (features.forms && organizationCan(organization.role, "leads:manage")) tabs.push({ label: "Leads", segment: "leads" });
+  if (features.analytics && organizationCan(organization.role, "analytics:read")) tabs.push({ label: "Analytics", segment: "analytics" });
+  if (organizationCan(organization.role, "page:publish")) tabs.push({ label: "Settings", segment: "settings" });
   return <><PageTabs base={pagePath(organizationId, pageId)} tabs={tabs} />{children}</>;
 }
