@@ -9,9 +9,11 @@ import { DashboardError, missingResource } from "@/server/dashboard/errors";
 import { publicSiteOrigin } from "@/server/env";
 import { dashboardFeatures } from "@/server/dashboard/features";
 import { directoryFilters } from "@/lib/dashboard/pages";
+import { leadFilters } from "@/lib/dashboard/leads";
 import { createDraft, listPages, readDraft, saveDraft } from "@/server/dashboard/pages";
 import { privateImage, uploadImage } from "@/server/dashboard/media";
 import { archivePage, publishPage, restorePage, unpublishPage } from "@/server/dashboard/publication";
+import { listLeads, readLead, removeLead, updateLead } from "@/server/dashboard/leads";
 
 type DashboardApi = { Variables: { userId: string } };
 
@@ -101,4 +103,16 @@ dashboardApi.post("/:organizationId/pages/:pageId/archive", async (c) => c.json(
 )));
 dashboardApi.post("/:organizationId/pages/:pageId/restore", async (c) => c.json(await restorePage(
   c.get("userId"), c.req.param("organizationId"), c.req.param("pageId"),
+)));
+dashboardApi.get("/:organizationId/pages/:pageId/leads", async (c) => c.json(await listLeads(
+  c.get("userId"), c.req.param("organizationId"), c.req.param("pageId"), leadFilters(c.req.query()),
+)));
+dashboardApi.get("/:organizationId/pages/:pageId/leads/:leadId", async (c) => c.json(await readLead(
+  c.get("userId"), c.req.param("organizationId"), c.req.param("pageId"), c.req.param("leadId"),
+)));
+dashboardApi.patch("/:organizationId/pages/:pageId/leads/:leadId", async (c) => c.json(await updateLead(
+  c.get("userId"), c.req.param("organizationId"), c.req.param("pageId"), c.req.param("leadId"), await jsonBody(c.req.raw),
+)));
+dashboardApi.delete("/:organizationId/pages/:pageId/leads/:leadId", async (c) => c.json(await removeLead(
+  c.get("userId"), c.req.param("organizationId"), c.req.param("pageId"), c.req.param("leadId"),
 )));

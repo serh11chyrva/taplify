@@ -138,6 +138,14 @@ test("validates form versions and records a submission once", async ({ context }
   ]);
   expect(delivery.map((response) => response.status())).toEqual([200, 200]);
   expect(await delivery[0].json()).toEqual(await delivery[1].json());
+  const inbox = await context.request.get(`${route}/leads`);
+  expect(inbox.status()).toBe(200);
+  const { items, total } = await inbox.json();
+  expect(total).toBe(1);
+  const leadUrl = `${route}/leads/${items[0].id}`;
+  const updated = await context.request.patch(leadUrl, { data: { status: "in_progress", read: true } });
+  expect(updated.status()).toBe(200);
+  expect(await updated.json()).toMatchObject({ status: "in_progress", readAt: expect.any(String), formVersion: version });
 
   const [submission, unpublish] = await Promise.all([
     context.request.post(`${publicApi}/submissions`, { data: { ...data, submissionId: randomUUID() } }),
