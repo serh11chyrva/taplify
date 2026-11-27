@@ -1,4 +1,3 @@
-import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { ManageCookiesButton } from "@/components/cookies/cookie-consent-provider";
 import { COOKIE_POLICY_PATH } from "@/lib/cookie-consent";
@@ -24,7 +23,9 @@ function FooterLink({ label, marker, href, prefetch }: FooterLinkItem) {
   const content = (
     <>
       <span>{label}{marker && <sup>{marker}</sup>}</span>
-      <ArrowUpRight className={styles.footerLinkIcon} viewBox="4 4 16 16" aria-hidden="true" />
+      <svg className={styles.footerLinkIcon} viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <polygon points="3,3 13,3 13,13 11.75,13 11.75,5.125 3.5,13.375 2.625,12.5 10.875,4.25 3,4.25" />
+      </svg>
     </>
   );
 

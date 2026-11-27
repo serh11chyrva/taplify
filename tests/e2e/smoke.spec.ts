@@ -171,18 +171,24 @@ test("fits the navigation, footer columns, and link arrows on a narrow screen", 
 });
 
 test.describe("touch footer", () => {
-  test.use({ hasTouch: true, isMobile: true, viewport: { width: 375, height: 812 } });
+  test.use({ hasTouch: true, isMobile: true, viewport: { width: 375, height: 667 }, deviceScaleFactor: 2 });
 
   test("shows the arrow during touch press and focus", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: "Reject optional" }).click();
     const footer = page.getByRole("contentinfo");
-    const link = footer.getByRole("link", { name: "GitHub", exact: true });
+    const link = footer.getByRole("link", { name: "Terms of Service", exact: true });
     const arrow = link.locator("svg");
     const touch = { pointerType: "touch", isPrimary: true };
     await expect(arrow).toHaveCSS("opacity", "0");
     await link.dispatchEvent("pointerdown", touch);
     await expect(arrow).toHaveCSS("opacity", "1");
+    expect(await arrow.evaluate((icon) => {
+      const shape = icon.querySelector("polygon");
+      return Boolean(shape?.isPointInFill(new DOMPoint(5, 11))
+        && shape.isPointInFill(new DOMPoint(8, 8))
+        && !shape.isPointInFill(new DOMPoint(8, 9)));
+    })).toBe(true);
     await link.dispatchEvent("pointercancel", touch);
     await expect(arrow).toHaveCSS("opacity", "0");
     await link.focus();
