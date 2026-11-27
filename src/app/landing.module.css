@@ -146,15 +146,15 @@ button.footerLink:is(:hover, :focus-visible, :active) {
 }
 
 .signIn,
-.signIn:is(:hover, :active) {
-  background: var(--landing-control-hover);
-}
-
 .signUp {
   min-block-size: 2.75rem;
   padding-inline: 1.15rem;
   color: var(--landing-text);
   text-shadow: 0 1px 8px var(--landing-background);
+}
+
+.signIn:is(:hover, :active) {
+  background: var(--landing-control-hover);
 }
 
 .signUp {
