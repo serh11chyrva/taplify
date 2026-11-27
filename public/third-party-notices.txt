@@ -17503,12 +17503,13 @@ SOFTWARE.
 
 ========================================================================
 
-Simple Icons social logos (src/app/_landing/simple-icons.NOTICE.txt)
+Simple Icons brand logos (src/app/_landing/simple-icons.NOTICE.txt)
 
 Simple Icons
 https://github.com/simple-icons/simple-icons
 
-The X, YouTube, Instagram, and TikTok icons are available under CC0 1.0 Universal.
+Taplify uses the Google, X, YouTube, Instagram, and TikTok glyphs from Simple Icons.
+Simple Icons is distributed under CC0 1.0 Universal.
 https://creativecommons.org/publicdomain/zero/1.0/
 
 Brand names and logos belong to their respective owners.

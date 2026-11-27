@@ -35,15 +35,24 @@
 }
 
 .card {
+  --auth-surface: light-dark(#fff, #181818);
+  --auth-field: light-dark(#fafafa, #141414);
+  --auth-text: light-dark(#1c1c1c, #f5f5f5);
+  --auth-muted: light-dark(#636363, #ababab);
+  --auth-border: light-dark(#8d8d8d, #767676);
+  --auth-divider: light-dark(#dfdfdf, #383838);
+  --auth-hover: light-dark(#efefef, #2b2b2b);
+
   display: grid;
   inline-size: 100%;
   min-inline-size: 0;
   gap: 1.2rem;
   padding: clamp(1.125rem, 4vw, 2rem);
-  border: 1px solid var(--landing-divider);
+  border: 1px solid var(--auth-divider);
   border-radius: 1rem;
-  background: var(--landing-surface);
-  box-shadow: 0 1rem 3rem var(--landing-shadow);
+  background: var(--auth-surface);
+  color: var(--auth-text);
+  box-shadow: 0 1rem 3rem light-dark(rgb(0 0 0 / 12%), rgb(0 0 0 / 42%));
 }
 
 .card h1 {
@@ -73,21 +82,86 @@
   inline-size: 100%;
   min-block-size: 2.75rem;
   padding-inline: 0.75rem;
-  border: 1px solid var(--landing-control-border);
+  border: 1px solid var(--auth-border);
   border-radius: calc(var(--radius) - 2px);
-  background: var(--landing-background);
+  background: var(--auth-field);
   font-size: 1rem;
+}
+
+.field input::placeholder {
+  color: var(--auth-muted);
+  opacity: 1;
+}
+
+.field input[aria-invalid="true"] {
+  border-color: var(--auth-text);
 }
 
 .field input:disabled {
   opacity: 0.6;
 }
 
+.passwordControl {
+  position: relative;
+}
+
+.passwordControl input {
+  padding-inline-end: 3rem;
+}
+
+.passwordControl input::-ms-reveal {
+  display: none;
+}
+
+.passwordToggle {
+  position: absolute;
+  inset-block: 2px;
+  inset-inline-end: 2px;
+  display: grid;
+  place-items: center;
+  inline-size: 2.5rem;
+  border-radius: calc(var(--radius) - 4px);
+  color: var(--auth-muted);
+}
+
+.passwordToggle:enabled {
+  cursor: pointer;
+}
+
+.passwordToggle:disabled {
+  opacity: 0.6;
+}
+
+.primaryAction {
+  background: var(--landing-accent);
+  color: light-dark(#fff, #101010);
+}
+
+.primaryAction:enabled:is(:hover, :active) {
+  background: color-mix(in srgb, var(--landing-accent) 90%, light-dark(#000, #fff));
+}
+
+.googleAction {
+  border-color: var(--auth-border);
+  background: transparent;
+  color: var(--auth-text);
+}
+
+.googleAction:enabled:is(:hover, :active),
+.passwordToggle:enabled:is(:hover, :active) {
+  background: var(--auth-hover);
+  color: var(--auth-text);
+}
+
+.googleAction + .note {
+  text-align: center;
+}
+
 .divider {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: var(--landing-muted);
+  color: var(--auth-muted);
   font-size: 0.8125rem;
 }
 
@@ -95,14 +169,14 @@
 .divider::after {
   flex: 1;
   block-size: 1px;
-  background: var(--landing-divider);
+  background: var(--auth-divider);
   content: "";
 }
 
 .note,
 .switchPage,
 .error {
-  color: var(--landing-muted);
+  color: var(--auth-muted);
   font-size: 0.875rem;
   line-height: 1.5;
 }
@@ -112,17 +186,19 @@
 }
 
 .inlineLink {
-  color: var(--landing-accent-light);
+  color: var(--auth-text);
+  font-weight: 550;
   text-decoration: underline;
   text-underline-offset: 0.2em;
 }
 
-.inlineLink:focus-visible,
-.field input:focus-visible {
-  outline: 2px solid var(--landing-accent);
+.card :is(.inlineLink, input, button):focus-visible {
+  outline: 2px solid var(--auth-text);
   outline-offset: 2px;
+  box-shadow: none;
 }
 
 .error {
-  color: var(--danger);
+  color: var(--auth-text);
+  font-weight: 600;
 }

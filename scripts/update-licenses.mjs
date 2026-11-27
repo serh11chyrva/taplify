@@ -31,7 +31,7 @@ const assets = [
     file: "src/app/_landing/react-bits.LICENSE.md",
   },
   {
-    name: "Simple Icons social logos",
+    name: "Simple Icons brand logos",
     license: "CC0-1.0",
     author: "Simple Icons Contributors",
     file: "src/app/_landing/simple-icons.NOTICE.txt",

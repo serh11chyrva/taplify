@@ -122,25 +122,50 @@ test("shows the email forms and account terms on mobile", async ({ page }) => {
 
   const main = page.getByRole("main");
   const signIn = main.getByRole("region", { name: "Sign in" });
+  const logo = main.getByRole("link", { name: "Taplify", exact: true });
+  const email = main.getByLabel("Email", { exact: true });
+  const password = main.getByLabel("Password", { exact: true });
+  const confirmation = main.getByLabel("Confirm password", { exact: true });
   const google = main.getByRole("button", { name: "Continue with Google" });
-  await expect(main.getByRole("link", { name: "Taplify", exact: true }).locator("svg")).toBeVisible();
-  await expect(main.getByLabel("Email", { exact: true })).toHaveAttribute("type", "email");
-  await expect(main.getByLabel("Password", { exact: true })).toHaveAttribute("autocomplete", "current-password");
+  await expect(logo.locator("svg")).toBeVisible();
+  await expect(email).toHaveAttribute("type", "email");
+  await expect(email).toHaveAttribute("placeholder", "you@example.com");
+  await expect(password).toHaveAttribute("type", "password");
+  await expect(password).toHaveAttribute("placeholder", "••••••••");
+  await expect(password).toHaveAttribute("autocomplete", "current-password");
+  await expect(confirmation).toHaveCount(0);
+  await expect(main.getByRole("button", { name: "Show password", exact: true })).toBeVisible();
+  const signInAction = main.getByRole("button", { name: "Sign in", exact: true });
+  await expect(signInAction).toHaveCSS("background-color", await logo.evaluate((element) => getComputedStyle(element).color));
+  await expect(google).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(google).toHaveCSS("border-top-width", "1px");
+  await expect(google.locator("svg")).toHaveAttribute("fill", "currentColor");
   await expect(google).toHaveAccessibleDescription(/If you create an account with Google/);
+  const [googleBounds, termsBounds] = await Promise.all([
+    google.boundingBox(),
+    signIn.getByRole("link", { name: "Terms of Service" }).boundingBox(),
+  ]);
+  if (!googleBounds || !termsBounds) throw new Error("The Google button or terms are missing.");
+  expect(termsBounds.y).toBeGreaterThanOrEqual(googleBounds.y + googleBounds.height);
   await expect(main.getByRole("alert")).toHaveText("Unable to continue with Google. Please try again.");
   await expect(signIn).toHaveCSS("background-color", "rgb(255, 255, 255)");
 
   await page.emulateMedia({ colorScheme: "dark" });
-  await expect(signIn).toHaveCSS("background-color", "rgb(24, 23, 28)");
+  await expect(signIn).toHaveCSS("background-color", "rgb(24, 24, 24)");
   await main.getByRole("link", { name: "Sign up", exact: true }).click();
   await expect(page).toHaveURL("/sign-up");
   await expect(main.getByRole("heading", { name: "Create an account", level: 1 })).toBeVisible();
-  const password = main.getByLabel("Password", { exact: true });
   await expect(password).toHaveAttribute("autocomplete", "new-password");
   await expect(password).toHaveAttribute("minlength", "8");
+  await expect(confirmation).toHaveAttribute("autocomplete", "new-password");
+  await expect(confirmation).toHaveAttribute("placeholder", "••••••••");
+  await expect(confirmation).toHaveAttribute("required", "");
+  await expect(main.getByRole("button", { name: "Show password confirmation" })).toBeVisible();
   await expect(main.getByRole("link", { name: "Terms of Service" })).toHaveAttribute("href", "/terms-of-service");
   await expect(main.getByRole("link", { name: "Privacy Policy" })).toHaveAttribute("href", "/privacy-policy");
-  for (const action of [google, main.getByRole("button", { name: "Create account" })]) {
+  const createAccount = main.getByRole("button", { name: "Create account" });
+  await expect(createAccount).toHaveCSS("background-color", await logo.evaluate((element) => getComputedStyle(element).color));
+  for (const action of [google, createAccount]) {
     await expect(action).toHaveAccessibleDescription(/By creating an account, you agree to the Terms of Service and acknowledge the Privacy Policy/);
   }
   await expect(page.getByRole("contentinfo").getByRole("group", { name: "Theme" })).toBeVisible();
