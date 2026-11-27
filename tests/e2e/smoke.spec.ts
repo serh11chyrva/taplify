@@ -13,6 +13,8 @@ test("opens the landing page and authentication screens", async ({ page }) => {
   const products = nav.getByRole("button", { name: "Products" });
   const pricing = nav.getByRole("button", { name: "Pricing" });
   await expect(pricing).toBeDisabled();
+  await expect(nav.getByRole("button", { name: /^Templates\s*\*\*$/ })).toBeDisabled();
+  await expect(nav.getByRole("button", { name: /^FAQ & Guides\s*\*\*$/ })).toBeDisabled();
   await pricing.hover();
   await expect(pricing).toHaveCSS("text-decoration-line", "underline");
   await products.hover();
@@ -53,13 +55,13 @@ test("opens the landing page and authentication screens", async ({ page }) => {
   await expect(header).toHaveCSS("backdrop-filter", /blur\(12px\)/);
   await expect(header).toHaveCSS("box-shadow", "none");
   await expect(footer).toHaveCSS("background-color", "rgb(0, 0, 0)");
-  await expect(footer.getByRole("heading")).toHaveText(["Taplify", "Products", "Developers", "Legal", "Cookie", "Social"]);
+  await expect(footer.getByRole("heading")).toHaveText(["Taplify", "Legal", "Cookie", "Developers", "Products", "Social"]);
   await expect(footer.getByRole("listitem").filter({ hasText: /\S/ })).toHaveText([
     "Home", "Pricing**", "Dashboard", "Templates**", "About**", "Support**", "FAQ & Guides**", "Status**",
-    "Taplify Commercial*", "Taplify Analytics*", "Taplify AI*",
-    "GitHub", "Documentation**", "API**", "Integrations**", "Webhooks**",
     "Terms of Service", "Privacy Policy", "Licenses", "Company Information**",
     "Cookie Policy", "Manage Cookies",
+    "GitHub", "Documentation**", "API**", "Integrations**", "Webhooks**",
+    "Taplify Commercial*", "Taplify Analytics*", "Taplify AI*",
   ]);
   const cookieGroup = footer.getByRole("heading", { name: "Cookie", exact: true }).locator("..");
   await expect(cookieGroup.getByRole("listitem")).toHaveText(["Cookie Policy", "Manage Cookies"]);
@@ -214,6 +216,8 @@ test("fits the navigation, footer columns, and link arrows on a narrow screen", 
   await expect(page.locator("html")).toHaveCSS("overflow", "hidden");
   await expect(dialog.getByRole("button", { name: "Close" })).toBeFocused();
   await expect(nav).toBeVisible();
+  await expect(nav.getByRole("button", { name: /^Templates\s*\*\*$/ })).toBeVisible();
+  await expect(nav.getByRole("button", { name: /^FAQ & Guides\s*\*\*$/ })).toBeVisible();
   await expect(dialog.getByRole("link", { name: "Sign In", exact: true })).toBeVisible();
   await expect(dialog.getByRole("link", { name: "Sign Up", exact: true })).toBeVisible();
   const products = nav.getByRole("button", { name: "Products" });
@@ -228,17 +232,21 @@ test("fits the navigation, footer columns, and link arrows on a narrow screen", 
   await expect(toggle).toBeFocused();
 
   const footer = page.getByRole("contentinfo");
-  const headings = await footer.getByRole("heading").evaluateAll((elements) => elements
-    .map((element) => {
+  const [taplify, legal, cookie, developers, productsHeading, social] = await footer.getByRole("heading")
+    .evaluateAll((elements) => elements.map((element) => {
       const { x, y } = element.getBoundingClientRect();
-      return { title: element.textContent, x, y };
-    })
-    .sort((a, b) => a.y - b.y || a.x - b.x));
-  expect(headings.map(({ title }) => title)).toEqual(["Taplify", "Developers", "Products", "Legal", "Cookie", "Social"]);
-  for (let row = 0; row < headings.length; row += 2) {
-    expect(headings[row + 1].y).toBe(headings[row].y);
-    expect(headings[row + 1].x).toBeGreaterThan(headings[row].x);
-  }
+      return { x, y };
+    }));
+  expect(legal.y).toBe(taplify.y);
+  expect(legal.x).toBeGreaterThan(taplify.x);
+  expect(cookie.x).toBe(legal.x);
+  expect(cookie.y).toBeGreaterThan(legal.y);
+  expect(developers.x).toBe(taplify.x);
+  expect(developers.y).toBeGreaterThan(cookie.y);
+  expect(productsHeading.x).toBe(legal.x);
+  expect(productsHeading.y).toBe(developers.y);
+  expect(social.x).toBe(productsHeading.x);
+  expect(social.y).toBeGreaterThan(productsHeading.y);
 
   const link = footer.getByRole("link", { name: "Company Information**", exact: true });
   const arrow = link.locator("svg");

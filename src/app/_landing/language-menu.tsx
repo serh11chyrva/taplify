@@ -101,7 +101,9 @@ export function LanguageMenu({ value, copy }: {
         >
           <span id={labelId} className="sr-only">{copy.language}</span>
           <Globe aria-hidden="true" />
-          <span id={valueId} lang={current.value === "auto" ? undefined : current.value}>{current.label}</span>
+          <span className={styles.languageValue} id={valueId} lang={current.value === "auto" ? undefined : current.value}>
+            {current.label}
+          </span>
           <ChevronDown className={styles.languageChevron} aria-hidden="true" />
         </button>
         <div ref={menu} className={styles.languageMenu} id={menuId} role="menu" aria-labelledby={labelId} hidden={!open}>

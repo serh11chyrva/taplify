@@ -20,12 +20,16 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function HomePage() {
   const { locale } = await getSitePreferences();
-  const { landing, cookies } = getSiteMessages(locale);
+  const { landing, footer, cookies } = getSiteMessages(locale);
   const { mainNavigation, products, pricing, signIn, signUp } = landing;
+  const { templates, faqAndGuides } = footer;
 
   return (
     <div className={styles.page}>
-      <LandingHeader copy={{ mainNavigation, products, pricing, signIn, signUp }} closeLabel={cookies.close} />
+      <LandingHeader
+        copy={{ mainNavigation, products, pricing, templates, faqAndGuides, signIn, signUp }}
+        closeLabel={cookies.close}
+      />
       <main>
         <section className={styles.hero} aria-labelledby="landing-title">
           <div className={styles.heroBackdrop} aria-hidden="true">

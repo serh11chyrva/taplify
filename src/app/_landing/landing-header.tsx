@@ -9,7 +9,8 @@ import styles from "../landing.module.css";
 import { ProductsMenu } from "./products-menu";
 import { TaplifyIcon } from "./taplify-icon";
 
-type HeaderCopy = Pick<SiteMessages["landing"], "mainNavigation" | "products" | "pricing" | "signIn" | "signUp">;
+type HeaderCopy = Pick<SiteMessages["landing"], "mainNavigation" | "products" | "pricing" | "signIn" | "signUp">
+  & Pick<SiteMessages["footer"], "templates" | "faqAndGuides">;
 
 function HeaderBrand({ onNavigate }: { onNavigate?: () => void }) {
   return (
@@ -26,6 +27,9 @@ function HeaderMenu({ copy, onNavigate }: { copy: HeaderCopy; onNavigate?: () =>
       <nav className={styles.headerNav} aria-label={copy.mainNavigation}>
         <ProductsMenu label={copy.products} />
         <button type="button" className={styles.headerLink} disabled>{copy.pricing}</button>
+        {[copy.templates, copy.faqAndGuides].map((label) => (
+          <button key={label} type="button" className={styles.headerLink} disabled>{label}<sup>**</sup></button>
+        ))}
       </nav>
       <div className={styles.headerActions}>
         <Button asChild variant="ghost" className={styles.signIn}>
@@ -74,7 +78,7 @@ export function LandingHeader({ copy, closeLabel }: { copy: HeaderCopy; closeLab
   }, []);
 
   useEffect(() => {
-    const narrowScreen = window.matchMedia("(width <= 40rem)");
+    const narrowScreen = window.matchMedia("(width <= 48rem)");
 
     function dismissOnWideScreen(event: MediaQueryListEvent) {
       if (!event.matches) menu.current?.close();

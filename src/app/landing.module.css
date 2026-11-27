@@ -40,7 +40,7 @@
 .headerInner {
   display: grid;
   block-size: 100%;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
   align-items: center;
   gap: 0.5rem;
 }
@@ -283,10 +283,14 @@ button.footerLink:is(:hover, :focus-visible, :active) {
   white-space: normal;
 }
 
-.cta:hover {
-  border-color: var(--landing-accent-light);
-  background: color-mix(in srgb, var(--landing-accent) 12%, transparent);
-  color: var(--landing-text);
+.cta:is(:hover, :active) {
+  border-color: var(--landing-accent);
+  background: var(--landing-accent);
+  color: #fff;
+}
+
+.cta:active {
+  transition-duration: 0s;
 }
 
 .section {
@@ -543,7 +547,7 @@ button.footerLink:is(:hover, :focus-visible, :active) {
 .footer {
   --footer-muted: light-dark(#5c5c5c, #b3b3b3);
 
-  padding-block: clamp(2.4rem, 6vw, 4.5rem) 1.8rem;
+  padding-block: clamp(2rem, 4.5vw, 3.5rem) 1.5rem;
   background: light-dark(#f8f6fb, #000000);
 }
 
@@ -556,11 +560,11 @@ button.footerLink:is(:hover, :focus-visible, :active) {
 .footerColumn {
   display: grid;
   align-content: start;
-  gap: 1.65rem;
+  gap: 1.15rem;
 }
 
 .footerColumns h2 {
-  margin-block-end: 0.8rem;
+  margin-block-end: 0.65rem;
   font-size: 0.875rem;
   font-weight: 660;
 }
@@ -624,7 +628,7 @@ button.footerLink {
 .footerNotes {
   display: grid;
   gap: 0.2rem;
-  margin-block-start: clamp(1.8rem, 4vw, 2.8rem);
+  margin-block-start: clamp(1.4rem, 3vw, 2.25rem);
   color: var(--landing-muted);
   font-size: 0.8125rem;
 }
@@ -769,13 +773,20 @@ button.footerLink {
   font-size: 0.8125rem;
 }
 
+@media (width <= 56rem) {
+  .headerNav {
+    gap: 0.75rem;
+  }
+
+  .signIn,
+  .signUp {
+    padding-inline: 0.8rem;
+  }
+}
+
 @media (width <= 48rem) {
   .page {
     --landing-header-height: 4.25rem;
-  }
-
-  .headerInner {
-    grid-template-columns: auto minmax(0, 1fr) auto;
   }
 
   .brand {
@@ -788,11 +799,6 @@ button.footerLink {
     block-size: 1.5rem;
   }
 
-  .signIn,
-  .signUp {
-    padding-inline: 0.8rem;
-  }
-
   .exampleGrid,
   .split {
     grid-template-columns: 1fr;
@@ -800,20 +806,10 @@ button.footerLink {
 
   .footerColumns {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    row-gap: 1.5rem;
+    row-gap: 1.3rem;
     column-gap: clamp(0.75rem, 4vw, 1.5rem);
   }
 
-  .footerColumn {
-    display: contents;
-  }
-
-  .footerFirstRow {
-    order: -1;
-  }
-}
-
-@media (width <= 40rem) {
   :global(html):has(.headerDialog[open]) {
     overflow: hidden;
   }
@@ -893,31 +889,35 @@ button.footerLink {
     padding-block-start: 1rem;
     border-block-start: 1px solid var(--landing-divider);
   }
-}
 
-@media (width <= 33rem) {
-  .footerColumns ul {
-    font-size: 0.8125rem;
-  }
-
-  .footerBottom,
-  .footerPreferences {
+  .footerBottom {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .footerPreferences {
     display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0;
   }
 
   .languageTrigger,
-  .languageMenu,
-  .themeGroup {
+  .languageMenu {
     inline-size: 100%;
   }
 
   .languageTrigger {
+    display: flex;
     min-block-size: 2.75rem;
     border: 1px solid var(--preference-border);
+    border-inline-end: 0;
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+  }
+
+  .languageValue {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .languageTrigger .languageChevron {
@@ -925,12 +925,26 @@ button.footerLink {
   }
 
   .languageMenu {
-    min-inline-size: 0;
+    inset-inline: 0 auto;
+  }
+
+  .themeGroup {
+    display: flex;
   }
 
   .themeButton {
     min-block-size: 2.75rem;
-    flex: 1;
+  }
+
+  .themeButton:first-child {
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+  }
+}
+
+@media (width <= 33rem) {
+  .footerColumns ul {
+    font-size: 0.8125rem;
   }
 }
 

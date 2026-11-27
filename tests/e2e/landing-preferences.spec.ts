@@ -7,6 +7,7 @@ test("follows the system theme and remembers an explicit theme", async ({ page }
 
   const signIn = page.getByRole("link", { name: "Sign In", exact: true });
   const signUp = page.getByRole("link", { name: "Sign Up", exact: true });
+  const createPage = page.getByRole("link", { name: "Create your first page", exact: true });
   const footer = page.getByRole("contentinfo");
   const theme = footer.getByRole("group", { name: "Theme" });
   const system = theme.getByRole("button", { name: "System" });
@@ -19,6 +20,10 @@ test("follows the system theme and remembers an explicit theme", async ({ page }
   await expect(signUp).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(signUp).toHaveCSS("border-top-width", "1px");
   await expect(signUp).toHaveCSS("border-top-color", "rgb(162, 147, 173)");
+  await expect(createPage).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await createPage.hover();
+  await expect(createPage).toHaveCSS("background-color", "rgb(134, 6, 172)");
+  await expect(createPage).toHaveCSS("color", "rgb(255, 255, 255)");
   await signIn.hover();
   await expect(signIn).toHaveCSS("background-color", "rgb(234, 234, 234)");
 
@@ -27,6 +32,9 @@ test("follows the system theme and remembers an explicit theme", async ({ page }
   await expect(signIn).toHaveCSS("background-color", "rgb(37, 37, 37)");
   await expect(signUp).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(signUp).toHaveCSS("border-top-color", "rgb(104, 100, 113)");
+  await createPage.hover();
+  await expect(createPage).toHaveCSS("background-color", "rgb(212, 0, 255)");
+  await expect(createPage).toHaveCSS("color", "rgb(255, 255, 255)");
 
   await light.click();
   await expect(footer).toHaveCSS("background-color", "rgb(248, 246, 251)");
@@ -67,11 +75,11 @@ test.describe("landing language", () => {
     ]);
     if (!copyright || !themeControl || !languageControl) throw new Error("The footer controls are missing.");
     expect(languageControl.y).toBeGreaterThanOrEqual(copyright.y + copyright.height);
-    expect(themeControl.y).toBeGreaterThanOrEqual(languageControl.y + languageControl.height);
-    for (const control of [languageControl, themeControl]) {
-      expect(control.x).toBeCloseTo(copyright.x);
-      expect(control.width).toBeCloseTo(copyright.width);
-    }
+    expect(themeControl.y).toBeCloseTo(languageControl.y);
+    expect(themeControl.height).toBeCloseTo(languageControl.height);
+    expect(languageControl.x).toBeCloseTo(copyright.x);
+    expect(themeControl.x).toBeCloseTo(languageControl.x + languageControl.width);
+    expect(themeControl.x + themeControl.width).toBeCloseTo(copyright.x + copyright.width);
 
     await language.press("Enter");
     const automatic = menu.getByRole("menuitemradio", { name: "Automatique" });
