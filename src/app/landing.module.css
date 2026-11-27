@@ -30,7 +30,7 @@
   block-size: var(--landing-header-height);
 }
 
-.header[data-scrolled] {
+.header[data-overlap] {
   background-color: color-mix(in srgb, var(--landing-background) 79%, transparent);
   -webkit-backdrop-filter: blur(12px) saturate(135%);
   backdrop-filter: blur(12px) saturate(135%);
@@ -198,12 +198,12 @@ button.footerLink:is(:hover, :focus-visible, :active) {
 }
 
 :global([data-theme="light"]) .heroBackdrop {
-  --landing-dither-filter: invert(1) opacity(0.55);
+  --landing-dither-filter: invert(1) opacity(0.65);
 }
 
 @media (prefers-color-scheme: light) {
   :global([data-theme="system"]) .heroBackdrop {
-    --landing-dither-filter: invert(1) opacity(0.55);
+    --landing-dither-filter: invert(1) opacity(0.65);
   }
 }
 
@@ -214,7 +214,7 @@ button.footerLink:is(:hover, :focus-visible, :active) {
 .heroBackdrop::before {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle, light-dark(#d2c5da, #101010) 0.65px, transparent 0.95px) center / 3px 3px;
+  background: radial-gradient(circle, light-dark(#c5b4d0, #101010) 0.65px, transparent 0.95px) center / 3px 3px;
   opacity: 0.78;
   content: "";
 }
@@ -223,8 +223,21 @@ button.footerLink:is(:hover, :focus-visible, :active) {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to bottom, color-mix(in srgb, var(--landing-background) 78%, transparent) 10%, transparent 27% 78%, var(--landing-background)),
-    radial-gradient(ellipse at 50% 54%, color-mix(in srgb, var(--landing-background) 80%, transparent) 35%, color-mix(in srgb, var(--landing-background) 54%, transparent) 63%, transparent 92%);
+    linear-gradient(
+      to bottom,
+      var(--landing-background),
+      color-mix(in srgb, var(--landing-background) 72%, transparent) 9%,
+      transparent 28% 66%,
+      color-mix(in srgb, var(--landing-background) 48%, transparent) 85%,
+      var(--landing-background)
+    ),
+    radial-gradient(
+      ellipse at 50% 53%,
+      color-mix(in srgb, var(--landing-background) 92%, transparent),
+      color-mix(in srgb, var(--landing-background) 75%, transparent) 41%,
+      color-mix(in srgb, var(--landing-background) 37%, transparent) 71%,
+      transparent
+    );
   content: "";
 }
 
@@ -274,6 +287,10 @@ button.footerLink:is(:hover, :focus-visible, :active) {
 .section {
   border-block-start: 1px solid var(--landing-divider);
   padding-block: clamp(4rem, 7.5vw, 7rem);
+}
+
+.hero + .section {
+  border-block-start: 0;
 }
 
 .sectionHeading {
@@ -874,11 +891,11 @@ button.footerLink {
 
 @media (prefers-reduced-motion: no-preference) {
   .header {
-    transition: background-color 180ms ease;
+    transition: background-color 260ms ease, backdrop-filter 260ms ease;
   }
 
   .reveal[data-reveal="shown"] {
-    animation: reveal 520ms cubic-bezier(0.2, 0.65, 0.3, 1) var(--landing-reveal-delay, 0ms) backwards;
+    animation: reveal 680ms cubic-bezier(0.22, 0.7, 0.3, 1) var(--landing-reveal-delay, 0ms) backwards;
   }
 
   .reveal[data-reveal="pending"]:not(:focus-within) {
@@ -893,7 +910,7 @@ button.footerLink {
 
   @media (scripting: enabled) {
     .heroContent > * {
-      animation: reveal 520ms cubic-bezier(0.2, 0.65, 0.3, 1) var(--landing-reveal-delay, 0ms) backwards;
+      animation: reveal 680ms cubic-bezier(0.22, 0.7, 0.3, 1) var(--landing-reveal-delay, 0ms) backwards;
     }
 
     .heroContent > .description {
@@ -913,6 +930,21 @@ button.footerLink {
 
     .exampleGrid > :nth-child(3) {
       --landing-reveal-delay: 160ms;
+    }
+  }
+
+  @media (width > 48rem) and (hover: hover) and (pointer: fine) {
+    :global(html):has(.page) {
+      scroll-snap-type: y proximity;
+    }
+
+    .section {
+      scroll-margin-block-start: var(--landing-header-height);
+      scroll-snap-align: start;
+    }
+
+    .footer {
+      scroll-snap-align: end;
     }
   }
 }

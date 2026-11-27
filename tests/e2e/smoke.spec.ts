@@ -5,7 +5,7 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/One link\.\s*Your whole story\./);
   const header = page.getByRole("banner");
-  await expect(header).not.toHaveAttribute("data-scrolled", "");
+  await expect(header).not.toHaveAttribute("data-overlap", "");
   const brand = header.getByRole("link", { name: "Taplify", exact: true });
   await expect(brand).toHaveCSS("font-style", "italic");
   await expect(brand).toHaveCSS("font-weight", "700");
@@ -35,6 +35,10 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
   await expect(products).toHaveAttribute("aria-expanded", "false");
   await expect(products).toBeFocused();
 
+  await page.evaluate(() => window.scrollTo(0, 32));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+  await expect(header).not.toHaveAttribute("data-overlap", "");
+
   const examples = page.getByRole("region", { name: "A page for whatever you do." });
   const firstExample = examples.getByRole("article").first();
   await expect(firstExample.locator("..")).toHaveAttribute("data-reveal", "pending");
@@ -45,6 +49,7 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
 
   const footer = page.getByRole("contentinfo");
   await footer.scrollIntoViewIfNeeded();
+  await expect(header).toHaveAttribute("data-overlap", "");
   await expect(header).toHaveCSS("backdrop-filter", /blur\(12px\)/);
   await expect(header).toHaveCSS("box-shadow", "none");
   await expect(footer).toHaveCSS("background-color", "rgb(0, 0, 0)");
@@ -163,6 +168,22 @@ test("fits the navigation, footer columns, and link arrows on a narrow screen", 
   await toggle.click();
   await dialog.getByRole("link", { name: "Sign Up", exact: true }).click();
   await expect(page).toHaveURL("/login");
+});
+
+test("reveals a block once a fifth of it is in view", async ({ page }) => {
+  await page.setViewportSize({ width: 640, height: 740 });
+  await page.goto("/");
+  const block = page.getByRole("article").first().locator("..");
+  await expect(block).toHaveAttribute("data-reveal", "pending");
+
+  for (const [share, state] of [[0.1, "pending"], [0.25, "shown"]] as const) {
+    await block.evaluate((element, visibleShare) => {
+      const { top, height } = element.getBoundingClientRect();
+      window.scrollBy(0, top - document.documentElement.clientHeight + height * visibleShare);
+      return new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    }, share);
+    await expect(block).toHaveAttribute("data-reveal", state);
+  }
 });
 
 test("opens public policy pages from the footer and by URL", async ({ page }) => {

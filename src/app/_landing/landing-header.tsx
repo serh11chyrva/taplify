@@ -49,12 +49,28 @@ export function LandingHeader({ copy, closeLabel }: { copy: HeaderCopy; closeLab
 
   useEffect(() => {
     const header = ref.current;
-    if (!header) return;
+    const hero = header?.parentElement?.querySelector(`.${styles.hero}`);
+    const content = hero?.querySelector(`.${styles.heroContent}`);
+    if (!header || !hero || !content) return;
 
-    const update = () => header.toggleAttribute("data-scrolled", window.scrollY > 0);
+    const update = () => {
+      const headerBounds = header.getBoundingClientRect();
+      const contentBounds = content.getBoundingClientRect();
+      const overlapsHero = contentBounds.top < headerBounds.bottom && contentBounds.bottom > headerBounds.top;
+      const overlapsSections = hero.getBoundingClientRect().bottom < headerBounds.bottom;
+      header.toggleAttribute("data-overlap", overlapsHero || overlapsSections);
+    };
+
     update();
+    const observer = new ResizeObserver(update);
+    observer.observe(header);
+    observer.observe(hero);
+    observer.observe(content);
     window.addEventListener("scroll", update, { passive: true });
-    return () => window.removeEventListener("scroll", update);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", update);
+    };
   }, []);
 
   useEffect(() => {

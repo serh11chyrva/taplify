@@ -9,14 +9,20 @@ export function ScrollReveal({ className, children }: { className?: string; chil
   useEffect(() => {
     const element = ref.current;
     if (!element || typeof IntersectionObserver === "undefined") return;
-    const { top, bottom } = element.getBoundingClientRect();
-    if (top < window.innerHeight && bottom > 0) return;
+    const { top, bottom, height } = element.getBoundingClientRect();
+    const viewportHeight = document.documentElement.clientHeight;
+    if (!height || !viewportHeight) return;
+
+    // Keep the required visible area reachable for unusually tall blocks.
+    const threshold = Math.min(0.2, (viewportHeight * 0.95) / height);
+    const visibleHeight = Math.min(bottom, viewportHeight) - Math.max(top, 0);
+    if (visibleHeight >= height * threshold) return;
 
     const observer = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting) return;
+      if (!entry.isIntersecting || entry.intersectionRatio < threshold) return;
       element.dataset.reveal = "shown";
       observer.disconnect();
-    }, { rootMargin: "0px 0px -24px" });
+    }, { threshold });
     element.dataset.reveal = "pending";
     observer.observe(element);
 
