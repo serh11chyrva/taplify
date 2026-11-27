@@ -8,8 +8,8 @@ export default async function OrganizationDashboard({ params, searchParams }: {
   searchParams: Promise<DashboardSearch>;
 }) {
   const { organizationId } = await params;
-  const { user } = await workspace(organizationId);
+  const { user, organization } = await workspace(organizationId);
   const filters = directoryFilters(await searchParams);
   const result = await dashboardRead(() => listPages(user.id, organizationId, filters));
-  return <PageDirectory organizationId={organizationId} filters={filters} {...result} />;
+  return <PageDirectory organizationId={organizationId} canCreate={organization.role === "owner"} filters={filters} {...result} />;
 }

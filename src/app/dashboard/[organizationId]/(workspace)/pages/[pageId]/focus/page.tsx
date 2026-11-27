@@ -13,6 +13,10 @@ export default async function PageFocus({ params }: { params: Promise<{ organiza
         <PublicationStatus status={page.status} />
       </div>
       <p className="text-muted-foreground">{page.type} page</p>
+      {page.status !== "archived" && <Button asChild className="mt-5"><Link href={`${pagePath(organizationId, pageId)}/editor`}>Edit page</Link></Button>}
     </section>
   );
 }
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { pagePath } from "@/lib/dashboard/pages";

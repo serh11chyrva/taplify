@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Files, Search } from "lucide-react";
+import { Files, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { pagePath, type directoryFilters, type PageStatus, type PageSummary } from "@/lib/dashboard/pages";
 import { organizationPath } from "@/lib/dashboard/organizations";
@@ -15,14 +15,20 @@ export function PublicationStatus({ status }: { status: PageStatus }) {
   );
 }
 
-export function PageDirectory({ organizationId, items, filters, total, size }: {
+export function PageDirectory({ organizationId, canCreate, items, filters, total, size }: {
   organizationId: string;
+  canCreate: boolean;
   items: PageSummary[];
   filters: ReturnType<typeof directoryFilters>;
   total: number;
   size: number;
 }) {
   const home = organizationPath(organizationId);
+  const createPage = (
+    <Button asChild>
+      <Link href={`${home}/pages/new`}><Plus size={16} aria-hidden="true" /> New page</Link>
+    </Button>
+  );
 
   function filterLink(status: PageStatus | undefined, page = 1) {
     const query = new URLSearchParams();
@@ -39,6 +45,7 @@ export function PageDirectory({ organizationId, items, filters, total, size }: {
           <h1 className="text-4xl font-semibold tracking-tight">Pages</h1>
           <p className="mt-2 text-muted-foreground">Manage the organization’s public pages and drafts.</p>
         </div>
+        {canCreate && createPage}
       </div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <nav aria-label="Page status" className="flex flex-wrap gap-1 rounded-lg border bg-surface p-1 text-sm">
@@ -60,6 +67,7 @@ export function PageDirectory({ organizationId, items, filters, total, size }: {
           <Files size={28} className="text-muted-foreground" aria-hidden="true" />
           <h2 className="text-lg font-semibold">{filters.q || filters.status ? "No matching pages" : "No pages yet"}</h2>
           {filters.q || filters.status ? <Link href={home} className="text-sm underline">Clear filters</Link> : null}
+          {!filters.q && !filters.status && canCreate && <p className="max-w-sm text-sm text-muted-foreground">Start with a template and make the page yours in the editor.</p>}
         </section>
       ) : (
         <div className="overflow-x-auto rounded-xl border bg-surface">

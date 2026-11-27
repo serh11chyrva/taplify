@@ -1,8 +1,10 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import { resourceId } from "@/lib/dashboard/organizations";
+import { createPageInput, draftInput, draftSchema, initialDraft } from "@/lib/dashboard/draft";
 import { escapeRegex, type directoryFilters, type PageSummary } from "@/lib/dashboard/pages";
 import { getPageModel, type TaplifyPage } from "@/server/db/models/page";
-import { missingResource } from "./errors";
+import { DashboardError, isDuplicateKey, missingResource, validate } from "./errors";
 import { requireOrganization, type OrganizationPermission } from "./organizations";
 
 function summarize(page: Pick<TaplifyPage, "_id" | "name" | "type" | "slug" | "publishedAt" | "archivedAt" | "updatedAt">): PageSummary {
@@ -49,4 +51,41 @@ export async function sidebarPages(userId: string, organizationId: string) {
   const pages = await getPageModel().find({ organizationId, archivedAt: null })
     .select("-draft").sort({ updatedAt: -1, _id: 1 }).limit(15).lean();
   return pages.map(summarize);
+}
+
+export async function createDraft(userId: string, organizationId: string, raw: unknown) {
+  await requireOrganization(userId, organizationId, "draft:write");
+  const { name, type, bio, requestId } = validate(createPageInput, raw);
+  const model = getPageModel();
+  try {
+    const page = await model.create({
+      _id: randomUUID(), organizationId, name, type, createRequestId: requestId,
+      draft: initialDraft(name, type, bio), revision: 1,
+    });
+    return summarize(page);
+  } catch (error) {
+    if (!isDuplicateKey(error)) throw error;
+    const existing = await model.findOne({ organizationId, createRequestId: requestId }).lean();
+    if (!existing) throw error;
+    return summarize(existing);
+  }
+}
+
+export async function readDraft(userId: string, organizationId: string, pageId: string) {
+  const { page } = await requirePage(userId, organizationId, pageId, "draft:write");
+  if (page.archivedAt) throw missingResource();
+  return { page: summarize(page), draft: draftSchema.parse(page.draft), revision: page.revision };
+}
+
+export async function saveDraft(userId: string, organizationId: string, pageId: string, raw: unknown) {
+  const { page } = await requirePage(userId, organizationId, pageId, "draft:write");
+  if (page.archivedAt) throw missingResource();
+  const { expectedRevision, draft } = validate(draftInput, raw);
+  const updated = await getPageModel().findOneAndUpdate(
+    { _id: pageId, organizationId, revision: expectedRevision, archivedAt: null },
+    { $set: { draft, name: draft.name }, $inc: { revision: 1 } },
+    { returnDocument: "after" },
+  ).lean();
+  if (!updated) throw new DashboardError(409, "REVISION_CONFLICT", "The saved draft changed. Load the latest draft to continue.");
+  return { page: summarize(updated), draft, revision: updated.revision };
 }

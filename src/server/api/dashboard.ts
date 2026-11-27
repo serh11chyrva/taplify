@@ -1,11 +1,14 @@
 import "server-only";
 import { Hono, type Context } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { setCookie } from "hono/cookie";
 import { lastOrganizationCookie } from "@/lib/dashboard/organizations";
 import { getSession } from "@/server/services/session";
 import { createOrganization, listOrganizations, renameOrganization, requireOrganization } from "@/server/dashboard/organizations";
 import { DashboardError, missingResource } from "@/server/dashboard/errors";
 import { dashboardFeatures } from "@/server/dashboard/features";
+import { directoryFilters } from "@/lib/dashboard/pages";
+import { createDraft, listPages, readDraft, saveDraft } from "@/server/dashboard/pages";
 
 type DashboardApi = { Variables: { userId: string } };
 
@@ -38,6 +41,9 @@ dashboardApi.use("*", async (c, next) => {
   c.set("userId", session.user.id);
   await next();
 });
+dashboardApi.use("*", bodyLimit({ maxSize: 2 * 1024 * 1024 + 65536, onError: () => {
+  throw new DashboardError(422, "REQUEST_TOO_LARGE", "The request is too large.");
+} }));
 
 function selectOrganization(c: Context<DashboardApi>, organizationId: string) {
   setCookie(c, lastOrganizationCookie, organizationId, {
@@ -60,3 +66,16 @@ dashboardApi.post("/:organizationId/select", async (c) => {
   selectOrganization(c, organization.id);
   return c.json(organization);
 });
+
+dashboardApi.get("/:organizationId/pages", async (c) => c.json(await listPages(
+  c.get("userId"), c.req.param("organizationId"), directoryFilters(c.req.query()),
+)));
+dashboardApi.post("/:organizationId/pages", async (c) => c.json(await createDraft(
+  c.get("userId"), c.req.param("organizationId"), await jsonBody(c.req.raw),
+), 201));
+dashboardApi.get("/:organizationId/pages/:pageId", async (c) => c.json(await readDraft(
+  c.get("userId"), c.req.param("organizationId"), c.req.param("pageId"),
+)));
+dashboardApi.put("/:organizationId/pages/:pageId/draft", async (c) => c.json(await saveDraft(
+  c.get("userId"), c.req.param("organizationId"), c.req.param("pageId"), await jsonBody(c.req.raw),
+)));
