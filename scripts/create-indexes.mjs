@@ -7,6 +7,12 @@ try {
   const db = client.db(process.env.MONGODB_DB_NAME || "taplify");
   // Additive only: never sync/drop indexes against a production database.
   await db.collection("media_assets").createIndex({ ownerId: 1, createdAt: -1 });
+  await db.collection("organizations").createIndex(
+    { personalOwnerId: 1 },
+    { unique: true, partialFilterExpression: { personalOwnerId: { $type: "string" } } },
+  );
+  await db.collection("organization_memberships").createIndex({ organizationId: 1, userId: 1 }, { unique: true });
+  await db.collection("organization_memberships").createIndex({ userId: 1, organizationId: 1 });
   console.log("Application indexes created");
 } catch {
   console.error("Index creation failed. Check database access and existing indexes.");
