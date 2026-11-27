@@ -1,6 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { draftAssetIds, draftSchema, type PageDraft } from "@/lib/dashboard/draft";
+import { formProblem, pageForm } from "@/lib/dashboard/forms";
 import { getPageModel } from "@/server/db/models/page";
 import { connectMongoose } from "@/server/db/mongoose";
 import { databaseConfigured, publicSiteOrigin } from "@/server/env";
@@ -28,6 +29,7 @@ function hasContent(draft: PageDraft) {
       case "image": return Boolean(block.image.assetId);
       case "gallery": return block.items.some((item) => item.assetId);
       case "portfolio": return block.items.some((item) => item.title.trim() || item.description.trim() || item.image.assetId || item.url);
+      case "contact": return block.fields.length > 0;
     }
   });
 }
@@ -44,6 +46,9 @@ export async function publishPage(userId: string, organizationId: string, pageId
   if (page.slug && slug && page.slug !== slug) throw new DashboardError(409, "SLUG_RESERVED", "This page already has a permanent slug.");
   const url = publicUrl(nextSlug);
   const draft = draftSchema.parse(page.draft);
+  const form = pageForm(draft);
+  const problem = form ? formProblem(form) : null;
+  if (problem) throw new DashboardError(422, "INVALID_FORM", problem);
   if (!hasContent(draft)) throw new DashboardError(422, "EMPTY_PAGE", "Add content to the page before publishing.");
   await checkMediaReferences(organizationId, draftAssetIds(draft));
   try {

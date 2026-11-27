@@ -9,13 +9,15 @@ import { PageRenderer } from "@/components/pages/page-renderer";
 import { blockNames, createBlock, moveItem, type Block, type PageDraft } from "@/lib/dashboard/draft";
 import { pageApiPath, pagePath, type PageSummary } from "@/lib/dashboard/pages";
 import { organizationMediaPath } from "@/lib/dashboard/media";
+import { pageForm } from "@/lib/dashboard/forms";
 import { DashboardRequestError, dashboardRequest, jsonRequest, requestMessage } from "@/lib/dashboard/request";
 import { BlockInspector, ItemControls, TextField } from "./block-inspector";
 import { AppearanceEditor } from "./appearance-editor";
 import { PublishButton } from "./publication-actions";
+import { FormEditor } from "./form-editor";
 
-export function PageEditor({ organizationId, page, draft: initial, revision: initialRevision }: {
-  organizationId: string; page: PageSummary; draft: PageDraft; revision: number;
+export function PageEditor({ organizationId, page, draft: initial, revision: initialRevision, formsEnabled }: {
+  organizationId: string; page: PageSummary; draft: PageDraft; revision: number; formsEnabled: boolean;
 }) {
   const router = useRouter();
   const pageId = page.id;
@@ -28,10 +30,11 @@ export function PageEditor({ organizationId, page, draft: initial, revision: ini
   const [uploading, setUploading] = useState(false);
   const [feedback, setFeedback] = useState<{ message: string; error?: boolean }>();
   const [conflict, setConflict] = useState(false);
-  const [tab, setTab] = useState<"blocks" | "appearance">("blocks");
+  const [tab, setTab] = useState<"blocks" | "appearance" | "form">("blocks");
   const [mobilePreview, setMobilePreview] = useState(false);
   const api = pageApiPath(organizationId, pageId);
   const active = draft.blocks.find((block) => block.id === selected) ?? draft.blocks[0];
+  const form = pageForm(draft);
 
   useEffect(() => {
     if (!dirty) return;
@@ -64,6 +67,14 @@ export function PageEditor({ organizationId, page, draft: initial, revision: ini
 
   function replaceBlock(next: Block) {
     change({ ...draft, blocks: draft.blocks.map((block) => block.id === next.id ? next : block) });
+  }
+
+  function addBlock(type: Block["type"]) {
+    if (draft.blocks.length >= 30 || (type === "contact" && (!formsEnabled || form))) return;
+    const block = createBlock(type);
+    change({ ...draft, blocks: [...draft.blocks, block] });
+    setSelected(block.id);
+    if (type === "contact") setTab("form");
   }
 
   async function save() {
@@ -123,10 +134,19 @@ export function PageEditor({ organizationId, page, draft: initial, revision: ini
           <div className="flex gap-1 rounded-lg border bg-surface p-1" role="group" aria-label="Editor section">
             <Button type="button" variant="ghost" size="sm" className="aria-pressed:bg-muted" disabled={uploading} aria-pressed={tab === "blocks"} onClick={() => setTab("blocks")}>Blocks</Button>
             <Button type="button" variant="ghost" size="sm" className="aria-pressed:bg-muted" disabled={uploading} aria-pressed={tab === "appearance"} onClick={() => setTab("appearance")}>Appearance</Button>
+            {formsEnabled && <Button type="button" variant="ghost" size="sm" className="aria-pressed:bg-muted" disabled={uploading}
+              aria-pressed={tab === "form"} onClick={() => setTab("form")}>Form</Button>}
           </div>
           {tab === "appearance" ? (
             <fieldset className="grid min-w-0 gap-4 rounded-xl border bg-surface p-4" disabled={saving}>
               <AppearanceEditor appearance={draft.appearance} onChange={(appearance) => change({ ...draft, appearance })} />
+            </fieldset>
+          ) : tab === "form" ? (
+            <fieldset className="grid min-w-0 gap-4 rounded-xl border bg-surface p-4" disabled={saving || uploading}>
+              {form ? <FormEditor form={form} onChange={replaceBlock} /> : (
+                <Button type="button" variant="outline" className="justify-self-start" disabled={draft.blocks.length >= 30}
+                  onClick={() => addBlock("contact")}>Add contact form</Button>
+              )}
             </fieldset>
           ) : (
           <fieldset className="grid min-w-0 gap-4 rounded-xl border bg-surface p-4" disabled={saving || uploading}>
@@ -136,13 +156,12 @@ export function PageEditor({ organizationId, page, draft: initial, revision: ini
             <div className="flex flex-wrap gap-1">
               <select className="dashboard-input" aria-label="Block type" value={blockType}
                 onChange={(event) => setBlockType(event.target.value as Block["type"])}>
-                {Object.entries(blockNames).map(([type, label]) => <option key={type} value={type}>{label}</option>)}
+                {Object.entries(blockNames).filter(([type]) => type !== "contact" || formsEnabled).map(([type, label]) =>
+                  <option key={type} value={type} disabled={type === "contact" && Boolean(form)}>{label}</option>)}
               </select>
-              <Button type="button" variant="outline" size="sm" disabled={draft.blocks.length >= 30} onClick={() => {
-                const block = createBlock(blockType);
-                change({ ...draft, blocks: [...draft.blocks, block] });
-                setSelected(block.id);
-              }}><Plus size={15} aria-hidden="true" /> Add block</Button>
+              <Button type="button" variant="outline" size="sm"
+                disabled={draft.blocks.length >= 30 || (blockType === "contact" && Boolean(form))}
+                onClick={() => addBlock(blockType)}><Plus size={15} aria-hidden="true" /> Add block</Button>
             </div>
           </div>
           <ul className="grid gap-1.5">
@@ -171,8 +190,10 @@ export function PageEditor({ organizationId, page, draft: initial, revision: ini
           </ul>
           {active && <div className="grid min-w-0 gap-3 border-t pt-4">
             <h3 className="font-semibold">{blockNames[active.type]}</h3>
-            <BlockInspector key={`${active.id}:${revision}`} block={active} onChange={replaceBlock}
-              organizationId={organizationId} onBusy={setUploading} />
+            {active.type === "contact" ? (formsEnabled && <Button type="button" variant="outline" className="justify-self-start"
+              onClick={() => setTab("form")}>Edit form fields</Button>) :
+              <BlockInspector key={`${active.id}:${revision}`} block={active} onChange={replaceBlock}
+                organizationId={organizationId} onBusy={setUploading} />}
           </div>}
           </fieldset>
           )}

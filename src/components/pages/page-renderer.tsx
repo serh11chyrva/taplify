@@ -6,6 +6,7 @@ import { contentLink, type Block, type PageDraft } from "@/lib/dashboard/draft";
 import { cn } from "@/lib/utils";
 import type { ImageDetails } from "@/lib/dashboard/media";
 import { PageEmbed } from "./page-embed";
+import { ContactPreview } from "./contact-preview";
 import "./page-renderer.css";
 
 export function ContentLink({ href, children, preview, className, itemId }: {
@@ -35,6 +36,8 @@ function MediaFigure({ image, mediaBase }: { image: ImageDetails; mediaBase?: st
 function PageBlock({ block, preview, mediaBase }: { block: Block; preview: boolean; mediaBase?: string }) {
   const linkStyle = "page-action flex items-center justify-center gap-2 rounded-[var(--page-radius)] border px-4 py-3 text-sm font-medium";
   switch (block.type) {
+    case "contact":
+      return preview ? <ContactPreview form={block} /> : null;
     case "image":
       return <MediaFigure image={block.image} mediaBase={mediaBase} />;
     case "gallery":

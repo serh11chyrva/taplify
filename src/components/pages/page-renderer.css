@@ -34,3 +34,13 @@
 .page-prose blockquote { border-inline-start: 2px solid currentColor; padding-inline-start: 0.75rem; }
 .page-prose pre { padding: 0.8rem; overflow-x: auto; background: rgb(128 128 128 / 12%); }
 .page-prose a { text-decoration: underline; }
+
+.page-form-input {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  border-radius: min(var(--page-radius), 0.55rem);
+  padding: 0.5rem 0.6rem;
+  background: var(--page-background);
+  color: inherit;
+}

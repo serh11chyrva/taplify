@@ -77,7 +77,7 @@ function ImageFields({ organizationId, image, onChange, onBusy }: {
 }
 
 export function BlockInspector({ block, onChange, organizationId, onBusy }: {
-  block: Block; onChange: (block: Block) => void; organizationId: string; onBusy: (busy: boolean) => void;
+  block: Exclude<Block, { type: "contact" }>; onChange: (block: Block) => void; organizationId: string; onBusy: (busy: boolean) => void;
 }) {
   switch (block.type) {
     case "image":

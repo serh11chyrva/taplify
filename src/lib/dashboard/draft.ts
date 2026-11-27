@@ -4,6 +4,7 @@ import { pageType } from "./pages";
 import { appearanceSchema, appearances } from "./appearance";
 import { embedSource } from "./embed";
 import { imageDetails, mediaId } from "./media";
+import { contactFormSchema, createContactField } from "./forms";
 
 export const pageName = z.string().trim().min(1, "Enter a page name.").max(45);
 const bio = z.string().max(250);
@@ -56,14 +57,15 @@ const portfolioBlock = z.object({
   items: z.array(z.object({ id: resourceId, title: heading, description, url: website, image: imageDetails })).max(15),
 });
 const block = z.discriminatedUnion("type", [
-  profileBlock, heroBlock, linksBlock, socialBlock, markdownBlock, embedBlock, imageBlock, galleryBlock, portfolioBlock,
+  profileBlock, heroBlock, linksBlock, socialBlock, markdownBlock, embedBlock, imageBlock, galleryBlock, portfolioBlock, contactFormSchema,
 ]);
 
 export const draftSchema = z.object({
   name: pageName,
   appearance: appearanceSchema.default(appearances.Paper),
   blocks: z.array(block).max(30).refine((blocks) => new Set(blocks.map((item) => item.id)).size === blocks.length,
-    "Each block must have its own ID."),
+    "Each block must have its own ID.").refine((blocks) => blocks.filter((item) => item.type === "contact").length <= 1,
+    "Each page can have one contact form."),
 });
 
 export const createPageInput = z.object({
@@ -78,6 +80,7 @@ export const blockNames: Record<Block["type"], string> = {
   profile: "Profile", hero: "Hero", links: "Links", social: "Social links",
   markdown: "Markdown", embed: "Embed",
   image: "Image", gallery: "Gallery", portfolio: "Portfolio",
+  contact: "Contact form",
 };
 
 export function createBlock(type: Block["type"]): Block {
@@ -92,6 +95,13 @@ export function createBlock(type: Block["type"]): Block {
     case "image": return { id, type, image: { alt: "", caption: "" } };
     case "gallery": return { id, type, title: "Gallery", items: [] };
     case "portfolio": return { id, type, title: "Selected work", items: [] };
+    case "contact": return {
+      id, type, title: "Get in touch", description: "", submitLabel: "Send message",
+      success: "Thanks for reaching out.", fields: [
+        { ...createContactField("Email", "email"), required: true },
+        { ...createContactField("Message", "textarea"), required: true },
+      ],
+    };
   }
 }
 

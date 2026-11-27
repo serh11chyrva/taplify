@@ -2,11 +2,13 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { resourceId } from "@/lib/dashboard/organizations";
 import { createPageInput, draftAssetIds, draftInput, draftSchema, initialDraft } from "@/lib/dashboard/draft";
+import { pageForm } from "@/lib/dashboard/forms";
 import { escapeRegex, type directoryFilters, type PageSummary } from "@/lib/dashboard/pages";
 import { getPageModel, type TaplifyPage } from "@/server/db/models/page";
 import { DashboardError, isDuplicateKey, missingResource, validate } from "./errors";
 import { requireOrganization, type OrganizationPermission } from "./organizations";
 import { checkMediaReferences } from "./media";
+import { dashboardFeatures } from "./features";
 
 function summarize(page: Pick<TaplifyPage, "_id" | "name" | "type" | "slug" | "publishedAt" | "archivedAt" | "updatedAt">): PageSummary {
   return {
@@ -83,6 +85,10 @@ export async function saveDraft(userId: string, organizationId: string, pageId: 
   const { page } = await requirePage(userId, organizationId, pageId, "draft:write");
   if (page.archivedAt) throw missingResource();
   const { expectedRevision, draft } = validate(draftInput, raw);
+  if (pageForm(draft) && !dashboardFeatures().forms) {
+    const existingForm = pageForm(draftSchema.parse(page.draft));
+    if (JSON.stringify(existingForm) !== JSON.stringify(pageForm(draft))) throw missingResource();
+  }
   await checkMediaReferences(organizationId, draftAssetIds(draft));
   const updated = await getPageModel().findOneAndUpdate(
     { _id: pageId, organizationId, revision: expectedRevision, archivedAt: null },
