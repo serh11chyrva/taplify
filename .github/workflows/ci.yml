@@ -81,3 +81,34 @@ jobs:
           GOOGLE_CLIENT_ID: test-google-client
           GOOGLE_CLIENT_SECRET: test-google-client-secret
         run: pnpm test:e2e tests/e2e/auth-form.spec.ts
+
+  dashboard:
+    name: Dashboard workflow
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TAPLIFY_DASHBOARD_E2E: "true"
+      DASHBOARD_ENABLED: "true"
+      MONGODB_URI: mongodb://127.0.0.1:27017/taplify_dashboard_test?replicaSet=taplify&directConnection=true
+      MONGODB_DB_NAME: taplify_dashboard_test
+      BETTER_AUTH_URL: http://127.0.0.1:3000
+      BETTER_AUTH_SECRET: dashboard-browser-tests-use-an-isolated-db
+      PUBLIC_SITE_ORIGIN: http://127.0.0.1:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Start an isolated MongoDB replica set
+        run: |
+          docker run -d --name taplify-mongo -p 127.0.0.1:27017:27017 mongo:8.0 --replSet taplify --bind_ip_all
+          timeout 60s bash -c 'until docker exec taplify-mongo mongosh --quiet --eval "db.adminCommand({ ping: 1 }).ok" | grep -qx 1; do sleep 2; done'
+          docker exec taplify-mongo mongosh --quiet --eval 'rs.initiate({_id:"taplify",members:[{_id:0,host:"localhost:27017"}]})'
+          timeout 60s bash -c 'until docker exec taplify-mongo mongosh --quiet --eval "db.hello().isWritablePrimary" | grep -qx true; do sleep 2; done'
+          node scripts/create-indexes.mjs
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e tests/e2e/dashboard-workflow.spec.ts

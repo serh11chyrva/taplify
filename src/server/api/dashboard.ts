@@ -10,7 +10,7 @@ import { dashboardFeatures } from "@/server/dashboard/features";
 import { directoryFilters } from "@/lib/dashboard/pages";
 import { createDraft, listPages, readDraft, saveDraft } from "@/server/dashboard/pages";
 import { privateImage, uploadImage } from "@/server/dashboard/media";
-import { publishPage, unpublishPage } from "@/server/dashboard/publication";
+import { archivePage, publishPage, restorePage, unpublishPage } from "@/server/dashboard/publication";
 
 type DashboardApi = { Variables: { userId: string } };
 
@@ -91,5 +91,11 @@ dashboardApi.post("/:organizationId/pages/:pageId/publish", async (c) => c.json(
   c.get("userId"), c.req.param("organizationId"), c.req.param("pageId"), await jsonBody(c.req.raw),
 )));
 dashboardApi.post("/:organizationId/pages/:pageId/unpublish", async (c) => c.json(await unpublishPage(
+  c.get("userId"), c.req.param("organizationId"), c.req.param("pageId"),
+)));
+dashboardApi.post("/:organizationId/pages/:pageId/archive", async (c) => c.json(await archivePage(
+  c.get("userId"), c.req.param("organizationId"), c.req.param("pageId"), await jsonBody(c.req.raw),
+)));
+dashboardApi.post("/:organizationId/pages/:pageId/restore", async (c) => c.json(await restorePage(
   c.get("userId"), c.req.param("organizationId"), c.req.param("pageId"),
 )));

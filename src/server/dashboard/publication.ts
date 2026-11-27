@@ -72,6 +72,30 @@ export async function unpublishPage(userId: string, organizationId: string, page
   return { published: false };
 }
 
+export async function archivePage(userId: string, organizationId: string, pageId: string, raw: unknown) {
+  const { page } = await requirePage(userId, organizationId, pageId, "page:publish");
+  const { confirmation } = validate(z.object({ confirmation: z.string().max(45) }), raw);
+  if (confirmation !== page.name) {
+    throw new DashboardError(422, "NAME_MISMATCH", "Enter the page name exactly as shown.");
+  }
+  if (page.archivedAt) return { archived: true };
+  const result = await getPageModel().updateOne(
+    { _id: pageId, organizationId, name: confirmation, archivedAt: null },
+    { $set: { archivedAt: new Date(), publishedAt: null }, $inc: { publicationVersion: 1 } },
+  );
+  if (!result.matchedCount) throw new DashboardError(409, "PUBLICATION_CONFLICT", "The page changed. Reload it before archiving.");
+  return { archived: true };
+}
+
+export async function restorePage(userId: string, organizationId: string, pageId: string) {
+  await requirePage(userId, organizationId, pageId, "page:publish");
+  await getPageModel().updateOne(
+    { _id: pageId, organizationId, archivedAt: { $ne: null } },
+    { $set: { archivedAt: null, publishedAt: null }, $inc: { publicationVersion: 1 } },
+  );
+  return { archived: false };
+}
+
 export async function publishedPage(slug: string) {
   const normalized = slugSchema.safeParse(slug);
   if (!normalized.success || slug !== normalized.data || !databaseConfigured()) return null;

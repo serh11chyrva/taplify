@@ -49,7 +49,7 @@ export function PageDirectory({ organizationId, canCreate, items, filters, total
       </div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <nav aria-label="Page status" className="flex flex-wrap gap-1 rounded-lg border bg-surface p-1 text-sm">
-          {([["All pages", undefined], ["Published", "published"], ["Drafts", "draft"]] as const).map(([label, status]) => (
+          {([["All pages", undefined], ["Published", "published"], ["Drafts", "draft"], ["Archived", "archived"]] as const).map(([label, status]) => (
             <Link key={label} href={filterLink(status)} aria-current={status === filters.status ? "page" : undefined}
               className="rounded-md px-3 py-1.5 text-muted-foreground hover:bg-muted aria-[current=page]:bg-muted aria-[current=page]:text-foreground">
               {label}

@@ -2,7 +2,7 @@
 
 A small SaaS for public link pages, portfolios, contact forms, leads, and analytics.
 
-This bootstrap implements the technical foundation from the general MVP plan. It includes a landing page, email and Google authentication, a session-protected dashboard shell, a Hono API, MongoDB connection helpers, a representative Typegoose model, and a Vercel Blob adapter. Taplify can use Google Analytics to measure visits with visitor consent. Page creation, editing, publishing, forms, leads, and analytics for page owners are future phases.
+Taplify includes email and Google authentication, an organization-scoped dashboard, a page editor, draft previews, and publishing. The app uses Next.js, Hono, MongoDB, Typegoose, and Vercel Blob. Taplify can use Google Analytics to measure visits to the platform with visitor consent.
 
 ## Local development
 
@@ -29,7 +29,9 @@ Open [localhost:3000](http://localhost:3000). The landing page and health endpoi
 | `GOOGLE_CLIENT_ID` | Optional Google OAuth web application client ID. Set with the Google client secret to enable Google authentication. |
 | `GOOGLE_CLIENT_SECRET` | Optional Google OAuth client secret. |
 | `NEXT_PUBLIC_GA4_MEASUREMENT_ID` | Optional GA4 web stream ID (`G-…`). Set it before building. |
-| `BLOB_READ_WRITE_TOKEN` | Token for a public Vercel Blob store; required only for image storage. |
+| `DASHBOARD_ENABLED` | Set to `true` to open the workspace dashboard and its authoring API. |
+| `PUBLIC_SITE_ORIGIN` | Canonical origin for published links. Defaults to the authentication origin. |
+| `BLOB_READ_WRITE_TOKEN` | Token for a private Vercel Blob store, required for page images. |
 
 Generate an auth secret with:
 
@@ -76,13 +78,13 @@ tests/
 scripts/                      Database ping and additive index creation
 ```
 
-Server modules import `server-only`. Hono and Server Components can call services directly; services do not depend on Hono or Next request APIs. Every future owner API must verify the session **and** resource ownership. Dashboard layout protection alone does not authorize APIs or Server Actions.
+Server modules import `server-only`. Hono and Server Components call domain services directly. Dashboard requests authenticate through Better Auth and scope each protected resource to the caller's organization membership and permission.
 
 The two cached connection pools serve the same database: the native driver serves Better Auth; Mongoose serves application models. Both reset rejected connection promises and cap each pool at five connections. Tune these caps for deployment concurrency and Atlas limits.
 
 `GET /api/health` is a liveness/compiler check: it constructs the Typegoose model without querying MongoDB. It is not a database readiness check. Unknown API routes return JSON 404s. API failures log only an event name, request ID, and error type; raw errors, request bodies, cookies, and tokens are excluded.
 
-The Blob adapter accepts JPEG, PNG, and WebP metadata up to 2 MB. It is not exposed as an upload endpoint. The future media service must authenticate the owner, inspect actual file signatures, persist the MediaAsset, and handle cleanup after failed persistence.
+The media service accepts JPEG, PNG, and WebP up to 2 MiB. It checks the image signature, stores the file in private Blob, and removes the Blob if saving its metadata fails. Guest image responses require a reference in the current published snapshot.
 
 ## Typegoose and UI configuration
 
@@ -122,10 +124,16 @@ pnpm db:check
 pnpm db:indexes
 ```
 
-Mongoose automatic index creation is disabled. `db:indexes` additively creates the current application index (`media_assets`: `ownerId`, `createdAt`); it never drops indexes. Extend the script alongside new models. Better Auth manages its own collection indexes through its adapter; check initialization logs and verify uniqueness indexes before opening registration to traffic.
+Mongoose automatic index creation is disabled. `db:indexes` creates application indexes for organization membership, page creation and slug uniqueness, and media. The script applies additive changes. Better Auth manages its own indexes through its adapter.
+
+## Dashboard rollout
+
+Apply the application indexes in the target database before enabling `DASHBOARD_ENABLED`. Use a test Atlas database and a private Blob store on Vercel Preview. Set `PUBLIC_SITE_ORIGIN` to the deployment's canonical origin, and verify sign-in, page creation, preview, guest publishing, and archive restoration. Disabling authoring keeps existing published pages available.
+
+The Dashboard workflow in CI runs its browser checks against an isolated MongoDB replica set. It uses real email sign-in and tests publication, archive behavior, concurrent draft saves, and organization isolation.
 
 ## Vercel
 
-Import this repository into a single Vercel project with the **Next.js** preset, Node.js **24.x**, install command `pnpm install --frozen-lockfile`, and build command `pnpm build`. Add the environment variables above to the appropriate environments, configure Atlas network access, and connect a public Blob store. All database/API code uses the Node.js runtime.
+Import this repository into a single Vercel project with the **Next.js** preset, Node.js **24.x**, install command `pnpm install --frozen-lockfile`, and build command `pnpm build`. Add the environment variables above to the appropriate environments, configure Atlas network access, and connect a private Blob store. All database/API code uses the Node.js runtime.
 
 After deployment, check `/api/health`, email registration and sign-in, Google sign-in if configured, sign-out, the dashboard redirect, Atlas connectivity, and index creation. Use Vercel request/function logs for diagnostics while keeping form answers and secrets out of logs.

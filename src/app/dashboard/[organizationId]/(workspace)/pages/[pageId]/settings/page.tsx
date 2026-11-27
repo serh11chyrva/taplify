@@ -1,5 +1,6 @@
 import { PublicationStatus } from "@/app/dashboard/_components/page-directory";
 import { PublicationSettings } from "@/app/dashboard/_components/publication-actions";
+import { ArchivePage } from "@/app/dashboard/_components/archive-page";
 import { pageApiPath } from "@/lib/dashboard/pages";
 import { pageSummary } from "@/server/dashboard/pages";
 import { publicUrl } from "@/server/dashboard/publication";
@@ -18,6 +19,7 @@ export default async function PageSettings({ params }: { params: Promise<{ organ
       </div>
       <p className="text-muted-foreground">{page.name} · {page.type}</p>
       <PublicationSettings page={page} url={url} api={pageApiPath(organizationId, pageId)} />
+      <ArchivePage page={page} api={pageApiPath(organizationId, pageId)} />
     </section>
   );
 }
