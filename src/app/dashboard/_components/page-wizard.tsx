@@ -2,7 +2,6 @@
 
 import { useState, type FormEvent } from "react";
 import { ArrowLeft, ArrowRight, Building2, Layers, UserRound } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { organizationApiPath } from "@/lib/dashboard/organizations";
 import { pagePath, type PageSummary, type PageType } from "@/lib/dashboard/pages";
@@ -16,7 +15,6 @@ const templates = [
 ] as const;
 
 export function PageWizard({ organizationId }: { organizationId: string }) {
-  const router = useRouter();
   const [step, setStep] = useState(1);
   const [type, setType] = useState<PageType>("Personal");
   const [name, setName] = useState("");
@@ -37,8 +35,7 @@ export function PageWizard({ organizationId }: { organizationId: string }) {
     try {
       const page = await dashboardRequest<PageSummary>(`${organizationApiPath(organizationId)}/pages`,
         jsonRequest("POST", { name, type, bio, avatar, requestId: id }));
-      router.replace(`${pagePath(organizationId, page.id)}/editor`);
-      router.refresh();
+      window.location.replace(`${pagePath(organizationId, page.id)}/editor`);
     } catch (problem) {
       setError(requestMessage(problem));
       setPending(false);

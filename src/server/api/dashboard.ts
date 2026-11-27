@@ -6,6 +6,7 @@ import { lastOrganizationCookie } from "@/lib/dashboard/organizations";
 import { getSession } from "@/server/services/session";
 import { createOrganization, listOrganizations, renameOrganization, requireOrganization } from "@/server/dashboard/organizations";
 import { DashboardError, missingResource } from "@/server/dashboard/errors";
+import { publicSiteOrigin } from "@/server/env";
 import { dashboardFeatures } from "@/server/dashboard/features";
 import { directoryFilters } from "@/lib/dashboard/pages";
 import { createDraft, listPages, readDraft, saveDraft } from "@/server/dashboard/pages";
@@ -18,7 +19,9 @@ export const dashboardApi = new Hono<DashboardApi>().basePath("/organizations");
 
 export function checkWriteOrigin(request: Request) {
   const origin = request.headers.get("origin");
-  if (request.headers.get("sec-fetch-site") === "cross-site" || (origin && origin !== new URL(request.url).origin)) {
+  const allowed = new Set([new URL(request.url).origin, publicSiteOrigin()]);
+  if (process.env.BETTER_AUTH_URL) allowed.add(new URL(process.env.BETTER_AUTH_URL).origin);
+  if (request.headers.get("sec-fetch-site") === "cross-site" || (origin && !allowed.has(origin))) {
     throw new DashboardError(403, "FORBIDDEN", "This request is not allowed.");
   }
 }

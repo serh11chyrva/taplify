@@ -49,6 +49,8 @@ export async function publishPage(userId: string, organizationId: string, pageId
   const form = pageForm(draft);
   const problem = form ? formProblem(form) : null;
   if (problem) throw new DashboardError(422, "INVALID_FORM", problem);
+  const priorForm = page.publishedDraft ? pageForm(draftSchema.parse(page.publishedDraft)) : undefined;
+  const formVersion = (page.formVersion ?? 0) + Number(JSON.stringify(priorForm) !== JSON.stringify(form));
   if (!hasContent(draft)) throw new DashboardError(422, "EMPTY_PAGE", "Add content to the page before publishing.");
   await checkMediaReferences(organizationId, draftAssetIds(draft));
   try {
@@ -57,7 +59,7 @@ export async function publishPage(userId: string, organizationId: string, pageId
         _id: pageId, organizationId, archivedAt: null, revision: expectedRevision,
         publicationVersion: page.publicationVersion || { $in: [null, 0] },
       },
-      { $set: { slug: nextSlug, publishedDraft: draft, publishedAt: new Date() }, $inc: { publicationVersion: 1 } },
+      { $set: { slug: nextSlug, publishedDraft: draft, publishedAt: new Date(), formVersion }, $inc: { publicationVersion: 1 } },
       { returnDocument: "after" },
     ).lean();
     if (!updated) throw new DashboardError(409, "PUBLICATION_CONFLICT", "The page changed. Reload it before publishing.");
@@ -106,11 +108,12 @@ export async function publishedPage(slug: string) {
   if (!normalized.success || slug !== normalized.data || !databaseConfigured()) return null;
   await connectMongoose();
   const page = await getPageModel().findOne({ slug, publishedAt: { $type: "date" }, archivedAt: null })
-    .select("_id organizationId publishedDraft publicationVersion publishedAt").lean();
+    .select("_id organizationId publishedDraft publicationVersion publishedAt formVersion").lean();
   if (!page?.publishedDraft || !page.publishedAt) return null;
   return {
     id: page._id, organizationId: page.organizationId, slug,
     draft: draftSchema.parse(page.publishedDraft), version: page.publicationVersion, publishedAt: page.publishedAt,
+    formVersion: page.formVersion ?? 0,
   };
 }
 

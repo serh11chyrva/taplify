@@ -58,6 +58,16 @@ export default function PrivacyPolicyPage() {
       )}
 
       <section>
+        <h2>Contact forms on published pages</h2>
+        <p>
+          When you submit a form on a Taplify page, we store your answers and the time of submission
+          and make them available to the organization that publishes the page. The organization can
+          use the information to respond and can delete the inquiry from its inbox. Taplify stores
+          a record of successful submissions for reporting and to avoid processing duplicate requests.
+        </p>
+      </section>
+
+      <section>
         <h2>Hosting and diagnostics</h2>
         <p>
           Vercel hosts Taplify and may process technical request data, such as the page requested,

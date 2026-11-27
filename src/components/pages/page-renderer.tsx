@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import type { ImageDetails } from "@/lib/dashboard/media";
 import { PageEmbed } from "./page-embed";
 import { ContactPreview } from "./contact-preview";
+import { ContactForm, type PublishedForm } from "./contact-form";
 import "./page-renderer.css";
 
 export function ContentLink({ href, children, preview, className, itemId }: {
@@ -33,11 +34,14 @@ function MediaFigure({ image, mediaBase }: { image: ImageDetails; mediaBase?: st
   );
 }
 
-function PageBlock({ block, preview, mediaBase }: { block: Block; preview: boolean; mediaBase?: string }) {
+function PageBlock({ block, preview, mediaBase, form }: {
+  block: Block; preview: boolean; mediaBase?: string; form?: PublishedForm;
+}) {
   const linkStyle = "page-action flex items-center justify-center gap-2 rounded-[var(--page-radius)] border px-4 py-3 text-sm font-medium";
   switch (block.type) {
     case "contact":
-      return preview ? <ContactPreview form={block} /> : null;
+      if (preview) return <ContactPreview form={block} />;
+      return form ? <ContactForm initial={block} published={form} /> : <p id="contact" role="status" className="text-sm">The contact form is temporarily unavailable.</p>;
     case "image":
       return <MediaFigure image={block.image} mediaBase={mediaBase} />;
     case "gallery":
@@ -126,7 +130,9 @@ function PageBlock({ block, preview, mediaBase }: { block: Block; preview: boole
   }
 }
 
-export function PageRenderer({ draft, preview = false, mediaBase }: { draft: PageDraft; preview?: boolean; mediaBase?: string }) {
+export function PageRenderer({ draft, preview = false, mediaBase, form }: {
+  draft: PageDraft; preview?: boolean; mediaBase?: string; form?: PublishedForm;
+}) {
   const { appearance } = draft;
   const style = {
     "--page-background": appearance.background, "--page-text": appearance.foreground,
@@ -137,7 +143,7 @@ export function PageRenderer({ draft, preview = false, mediaBase }: { draft: Pag
     <article className="page-renderer min-h-96 overflow-hidden rounded-xl px-5 py-8 sm:py-10" data-button={appearance.button} style={style}>
       {preview ? null : <h1 className="sr-only">{draft.name}</h1>}
       <div className="mx-auto grid max-w-lg gap-7">
-        {draft.blocks.map((block) => <PageBlock key={block.id} block={block} preview={preview} mediaBase={mediaBase} />)}
+        {draft.blocks.map((block) => <PageBlock key={block.id} block={block} preview={preview} mediaBase={mediaBase} form={form} />)}
       </div>
     </article>
   );

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { expect, test, type BrowserContext } from "@playwright/test";
+import { createBlock } from "../../src/lib/dashboard/draft";
 
 test.skip(process.env.TAPLIFY_DASHBOARD_E2E !== "true", "Requires the isolated dashboard replica set");
 
@@ -8,10 +9,16 @@ const password = "dashboard-test-only-password";
 
 async function register(context: BrowserContext) {
   const id = randomUUID();
-  const response = await context.request.post(`${origin}/api/auth/sign-up/email`, {
+  const signUp = () => context.request.post(`${origin}/api/auth/sign-up/email`, {
     headers: { origin },
     data: { email: `dashboard-${id}@example.test`, password, name: "Dashboard QA" },
   });
+  let response = await signUp();
+  if (response.status() === 429) {
+    const wait = Math.min(Number(response.headers()["retry-after"]) || 10, 10);
+    await new Promise((resolve) => setTimeout(resolve, (wait + 1) * 1000));
+    response = await signUp();
+  }
   expect(response.status()).toBe(200);
   const page = await context.newPage();
   await page.goto(`${origin}/dashboard`);
@@ -34,7 +41,10 @@ test("creates, publishes, archives, and restores a page", async ({ context, brow
   await page.getByRole("button", { name: "Back" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByLabel("Page name")).toHaveValue("Field Notes");
+  const creation = page.waitForResponse((response) => response.url().endsWith(`/api/organizations/${organizationId}/pages`) && response.request().method() === "POST");
   await page.getByRole("button", { name: "Create draft" }).click();
+  const created = await creation;
+  expect(created.status(), await created.text()).toBe(201);
   await expect(page).toHaveURL(/\/editor$/);
   const pageId = new URL(page.url()).pathname.split("/")[4];
   const privatePath = `/dashboard/${organizationId}/pages/${pageId}`;
@@ -97,4 +107,43 @@ test("scopes resources and resolves concurrent page writes", async ({ context, b
   } finally {
     await outsider.close();
   }
+});
+
+test("validates form versions and records a submission once", async ({ context }) => {
+  test.skip(process.env.PAGE_FORMS_ENABLED !== "true", "Requires the contact form release");
+  const { organizationId } = await register(context);
+  const api = `/api/organizations/${organizationId}/pages`;
+  const { id: pageId } = await (await context.request.post(api, {
+    data: { name: "Contact page", type: "Personal", requestId: randomUUID() },
+  })).json();
+  const route = `${api}/${pageId}`;
+  const { draft, revision } = await (await context.request.get(route)).json();
+  const form = createBlock("contact");
+  if (form.type !== "contact") throw new Error("Expected a contact form");
+  const [email, message] = form.fields;
+  const saved = await context.request.put(`${route}/draft`, {
+    data: { expectedRevision: revision, draft: { ...draft, blocks: [...draft.blocks, form] } },
+  });
+  expect(saved.status()).toBe(200);
+  const slug = `contact-${randomUUID()}`;
+  expect((await context.request.post(`${route}/publish`, { data: { expectedRevision: revision + 1, slug } })).status()).toBe(200);
+
+  const publicApi = `/api/public/pages/${slug}`;
+  const { version } = await (await context.request.get(`${publicApi}/form`)).json();
+  const data = { submissionId: randomUUID(), formVersion: version, answers: { [email.id]: "visitor@example.test", [message.id]: "Hello" } };
+  expect((await context.request.post(`${publicApi}/submissions`, { data: { ...data, formVersion: version + 1 } })).status()).toBe(409);
+  expect((await context.request.post(`${publicApi}/submissions`, { data: { ...data, answers: { [email.id]: "invalid" } } })).status()).toBe(422);
+  const delivery = await Promise.all([
+    context.request.post(`${publicApi}/submissions`, { data }), context.request.post(`${publicApi}/submissions`, { data }),
+  ]);
+  expect(delivery.map((response) => response.status())).toEqual([200, 200]);
+  expect(await delivery[0].json()).toEqual(await delivery[1].json());
+
+  const [submission, unpublish] = await Promise.all([
+    context.request.post(`${publicApi}/submissions`, { data: { ...data, submissionId: randomUUID() } }),
+    context.request.post(`${route}/unpublish`),
+  ]);
+  expect([200, 404, 409]).toContain(submission.status());
+  expect(unpublish.status()).toBe(200);
+  expect((await context.request.post(`${publicApi}/submissions`, { data })).status()).toBe(404);
 });

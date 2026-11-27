@@ -89,6 +89,7 @@ jobs:
     env:
       TAPLIFY_DASHBOARD_E2E: "true"
       DASHBOARD_ENABLED: "true"
+      PAGE_FORMS_ENABLED: "true"
       MONGODB_URI: mongodb://127.0.0.1:27017/taplify_dashboard_test?replicaSet=taplify&directConnection=true
       MONGODB_DB_NAME: taplify_dashboard_test
       BETTER_AUTH_URL: http://127.0.0.1:3000

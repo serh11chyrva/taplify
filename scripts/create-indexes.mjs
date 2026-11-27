@@ -20,6 +20,13 @@ try {
     { unique: true, partialFilterExpression: { createRequestId: { $type: "string" } } },
   );
   await db.collection("pages").createIndex({ slug: 1 }, { unique: true, partialFilterExpression: { slug: { $type: "string" } } });
+  await db.collection("leads").createIndex({ organizationId: 1, pageId: 1, submittedAt: -1, _id: 1 });
+  await db.collection("submission_receipts").createIndex({ pageId: 1, submissionId: 1 }, { unique: true });
+  await db.collection("page_events").createIndex({ pageId: 1, type: 1, eventId: 1 }, { unique: true });
+  await db.collection("page_events").createIndex({ organizationId: 1, occurredAt: 1 });
+  await db.collection("page_events").createIndex({ organizationId: 1, pageId: 1, occurredAt: 1 });
+  await db.collection("page_events").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+  await db.collection("public_rate_limits").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
   console.log("Application indexes created");
 } catch {
   console.error("Index creation failed. Check database access and existing indexes.");

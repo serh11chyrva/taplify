@@ -41,6 +41,12 @@ export class TaplifyPage {
   @prop({ type: () => Number, default: 0 })
   public publicationVersion!: number;
 
+  @prop({ type: () => Number, default: 0 })
+  public formVersion?: number;
+
+  @prop({ type: () => Number, default: 0 })
+  public acceptedSubmissions?: number;
+
   @prop({ type: () => Date, default: null })
   public publishedAt?: Date | null;
 
