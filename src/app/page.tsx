@@ -26,26 +26,28 @@ export default async function HomePage() {
 
   return (
     <div className={styles.page}>
-      <LandingHeader>
-        <div className={[styles.container, styles.headerInner].join(" ")}>
+      <LandingHeader
+        navigationLabel={landing.mainNavigation}
+        brand={(
           <Link href="/" className={styles.brand}>
             <TaplifyIcon className={styles.brandIcon} />
             Taplify
           </Link>
-          <nav className={styles.headerNav} aria-label={landing.mainNavigation}>
-            <ProductsMenu label={landing.products} />
-            <button type="button" className={styles.headerLink} disabled>
-              {landing.pricing}
-            </button>
-          </nav>
-          <div className={styles.headerActions}>
-            <Button asChild variant="outline" className={styles.signIn}>
-              <Link href="/login">{landing.signIn}</Link>
-            </Button>
-            <Button asChild className={styles.signUp}>
-              <Link href="/login">{landing.signUp}</Link>
-            </Button>
-          </div>
+        )}
+      >
+        <nav className={styles.headerNav} aria-label={landing.mainNavigation}>
+          <ProductsMenu label={landing.products} />
+          <button type="button" className={styles.headerLink} disabled>
+            {landing.pricing}
+          </button>
+        </nav>
+        <div className={styles.headerActions}>
+          <Button asChild variant="ghost" className={styles.signIn}>
+            <Link href="/login">{landing.signIn}</Link>
+          </Button>
+          <Button asChild variant="outline" className={styles.signUp}>
+            <Link href="/login">{landing.signUp}</Link>
+          </Button>
         </div>
       </LandingHeader>
       <main>

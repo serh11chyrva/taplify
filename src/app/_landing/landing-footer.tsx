@@ -22,7 +22,7 @@ function placeholders(labels: string[]) {
 function FooterLink({ label, marker, href, prefetch }: FooterLinkItem) {
   const content = (
     <>
-      {label}{marker && <sup>{marker}</sup>}
+      <span>{label}{marker && <sup>{marker}</sup>}</span>
       <ArrowUpRight className={styles.footerLinkIcon} aria-hidden="true" />
     </>
   );

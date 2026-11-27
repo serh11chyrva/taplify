@@ -5,6 +5,7 @@ test("follows the system theme and remembers an explicit theme", async ({ page }
   await page.goto("/");
   await page.getByRole("button", { name: "Reject optional" }).click();
 
+  const signIn = page.getByRole("link", { name: "Sign In", exact: true });
   const signUp = page.getByRole("link", { name: "Sign Up", exact: true });
   const footer = page.getByRole("contentinfo");
   const theme = footer.getByRole("group", { name: "Theme" });
@@ -13,15 +14,20 @@ test("follows the system theme and remembers an explicit theme", async ({ page }
   const dark = theme.getByRole("button", { name: "Dark" });
   await expect(system).toHaveAttribute("aria-pressed", "true");
   await expect(footer).toHaveCSS("background-color", "rgb(248, 246, 251)");
-  await expect(signUp).toHaveCSS("background-color", "rgb(0, 0, 0)");
+  await expect(signIn).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(signIn).toHaveCSS("border-top-width", "0px");
+  await expect(signUp).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(signUp).toHaveCSS("border-top-width", "1px");
+  await expect(signUp).toHaveCSS("border-top-color", "rgb(162, 147, 173)");
 
   await page.emulateMedia({ colorScheme: "dark" });
   await expect(footer).toHaveCSS("background-color", "rgb(0, 0, 0)");
-  await expect(signUp).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await expect(signUp).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(signUp).toHaveCSS("border-top-color", "rgb(104, 100, 113)");
 
   await light.click();
   await expect(footer).toHaveCSS("background-color", "rgb(248, 246, 251)");
-  await expect(signUp).toHaveCSS("background-color", "rgb(0, 0, 0)");
+  await expect(signUp).toHaveCSS("border-top-color", "rgb(162, 147, 173)");
   await page.reload();
   await expect(light).toHaveAttribute("aria-pressed", "true");
   await expect(footer).toHaveCSS("background-color", "rgb(248, 246, 251)");

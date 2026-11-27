@@ -104,6 +104,58 @@ test("opens the landing page and sign-in screen", async ({ page }) => {
   }
 });
 
+test("fits the navigation, footer columns, and link arrows on a narrow screen", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Reject optional" }).click();
+
+  const header = page.getByRole("banner");
+  const toggle = header.getByRole("button", { name: "Main", exact: true });
+  const nav = header.getByRole("navigation", { name: "Main" });
+  const signIn = header.getByRole("link", { name: "Sign In", exact: true });
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(nav).toBeHidden();
+  await expect(signIn).toBeHidden();
+
+  await toggle.click();
+  await expect(nav).toBeVisible();
+  await expect(signIn).toBeVisible();
+  await expect(header.getByRole("link", { name: "Sign Up", exact: true })).toBeVisible();
+  const products = nav.getByRole("button", { name: "Products" });
+  await products.press("Enter");
+  await expect(products).toHaveAttribute("aria-expanded", "true");
+  await products.press("Escape");
+  await expect(products).toHaveAttribute("aria-expanded", "false");
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await page.keyboard.press("Escape");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(toggle).toBeFocused();
+
+  const footer = page.getByRole("contentinfo");
+  const columns = footer.getByRole("heading", { name: /^(Taplify|Developers|Legal|Social)$/ });
+  await expect(columns).toHaveCount(4);
+  const [first, second, third, fourth] = await columns.evaluateAll((headings) => headings.map((heading) => {
+    const { x, y } = heading.getBoundingClientRect();
+    return { x, y };
+  }));
+  expect(second.x).toBeGreaterThan(first.x);
+  expect(second.y).toBe(first.y);
+  expect(third.x).toBe(first.x);
+  expect(third.y).toBeGreaterThan(first.y);
+  expect(fourth.x).toBe(second.x);
+  expect(fourth.y).toBe(third.y);
+
+  const link = footer.getByRole("link", { name: "Company Information**", exact: true });
+  const arrow = link.locator("svg");
+  await link.hover();
+  await expect(arrow).toHaveCSS("opacity", "1");
+  await expect(arrow).toHaveCSS("width", "14px");
+  expect(await link.evaluate((element) => {
+    const icon = element.querySelector("svg");
+    return Boolean(icon && icon.getBoundingClientRect().right <= element.getBoundingClientRect().right + 0.5);
+  })).toBe(true);
+});
+
 test("opens public policy pages from the footer and by URL", async ({ page }) => {
   for (const [title, path] of [
     ["Terms of Service", "/terms-of-service"],

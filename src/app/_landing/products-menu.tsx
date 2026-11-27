@@ -20,9 +20,7 @@ export function ProductsMenu({ label }: { label: string }) {
     }
 
     function dismissOnEscape(event: KeyboardEvent) {
-      if (event.key !== "Escape") return;
-      if (menu.current?.contains(document.activeElement)) trigger.current?.focus();
-      setOpen(false);
+      if (event.key === "Escape") setOpen(false);
     }
 
     document.addEventListener("pointerdown", dismissOutside);
@@ -45,6 +43,12 @@ export function ProductsMenu({ label }: { label: string }) {
       }}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== "Escape" || !open) return;
+        event.stopPropagation();
+        trigger.current?.focus();
+        setOpen(false);
       }}
     >
       <button
