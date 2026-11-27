@@ -4,6 +4,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { type ContactForm as Definition, type FormAnswer, type FormAnswers } from "@/lib/dashboard/forms";
 import { DashboardRequestError, dashboardRequest, jsonRequest, requestMessage } from "@/lib/dashboard/request";
 import { ContactFields } from "./contact-fields";
+import { usePageView } from "./public-page-analytics";
 
 export type PublishedForm = { slug: string; version: number };
 
@@ -20,6 +21,7 @@ function compatibleAnswers(previous: Definition, next: Definition, answers: Form
 }
 
 export function ContactForm({ initial, published }: { initial: Definition; published: PublishedForm }) {
+  const currentPageView = usePageView();
   const [form, setForm] = useState(initial);
   const [version, setVersion] = useState(published.version);
   const [answers, setAnswers] = useState<FormAnswers>({});
@@ -46,7 +48,9 @@ export function ContactForm({ initial, published }: { initial: Definition; publi
     retry.current = attempt;
 
     try {
-      await dashboardRequest(`${api}/submissions`, jsonRequest("POST", { submissionId: attempt.id, formVersion: version, answers }));
+      await dashboardRequest(`${api}/submissions`, jsonRequest("POST", {
+        submissionId: attempt.id, formVersion: version, answers, pageViewId: currentPageView(),
+      }));
       setComplete(true);
       setAnswers({});
     } catch (error) {

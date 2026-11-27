@@ -19,7 +19,8 @@ export function ContentLink({ href, children, preview, className, itemId }: {
 }) {
   const url = contentLink(href);
   return preview || !url ? <span className={className}>{children}</span> : (
-    <a href={url} className={className} data-page-link={itemId} rel={url.startsWith("#") ? undefined : "nofollow noreferrer"}>{children}</a>
+    <a href={url} className={className} data-page-link={url.startsWith("#") ? undefined : itemId}
+      rel={url.startsWith("#") ? undefined : "nofollow noreferrer"}>{children}</a>
   );
 }
 

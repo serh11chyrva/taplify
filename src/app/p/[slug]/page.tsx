@@ -40,7 +40,8 @@ export default async function PublicPage({ params }: PublicPageProps) {
   );
   return (
     <main lang="en" className="min-h-dvh" style={{ background: page.draft.appearance.background, color: page.draft.appearance.foreground }}>
-      {jar ? <PublicPageAnalytics initial={analyticsChoice(jar.get(pageAnalyticsCookie)?.value, jar.get(pageAnalyticsDeclineCookie)?.value)}>
+      {jar ? <PublicPageAnalytics slug={slug} publicationVersion={page.version}
+        initial={analyticsChoice(jar.get(pageAnalyticsCookie)?.value, jar.get(pageAnalyticsDeclineCookie)?.value)}>
         {content}
       </PublicPageAnalytics> : content}
     </main>

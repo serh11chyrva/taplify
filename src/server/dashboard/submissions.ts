@@ -13,6 +13,7 @@ import { DashboardError, isDuplicateKey, missingResource, validate } from "./err
 import { dashboardFeatures } from "./features";
 import { publishedPage } from "./publication";
 import { limitPublicRequest } from "./rate-limit";
+import { organizationVisitor } from "./analytics-consent";
 
 const submissionSchema = z.object({
   submissionId: resourceId,
@@ -102,6 +103,11 @@ export async function acceptSubmission(slug: string, request: Request, raw: unkn
   if (input.formVersion !== page.formVersion) throw changedForm();
   const answers = submissionAnswers(form, input.answers);
   const submittedAt = new Date();
+  const visitorKey = input.pageViewId ? organizationVisitor(request, page.organizationId) : undefined;
+  const pageViewId = visitorKey ? input.pageViewId : undefined;
+  const source = pageViewId ? await getPageEventModel().findOne({
+    organizationId: page.organizationId, pageId: page.id, type: "view", eventId: pageViewId, visitorKey,
+  }).select("referrer utmSource").lean() : null;
   const mongoose = await connectMongoose();
   try {
     await mongoose.connection.transaction(async (session) => {
@@ -115,11 +121,11 @@ export async function acceptSubmission(slug: string, request: Request, raw: unkn
       await getReceiptModel().create([{ ...receiptKey, fingerprint }], { session });
       await getLeadModel().create([{
         _id: randomUUID(), organizationId: page.organizationId, pageId: page.id, answers,
-        formVersion: page.formVersion, status: "new", submittedAt,
+        formVersion: page.formVersion, status: "new", submittedAt, source: source?.utmSource || source?.referrer,
       }], { session });
       await getPageEventModel().create([{
         organizationId: page.organizationId, pageId: page.id, type: "submission", eventId: input.submissionId,
-        occurredAt: submittedAt, expiresAt: new Date(submittedAt.getTime() + eventRetentionMs),
+        occurredAt: submittedAt, pageViewId, visitorKey, expiresAt: new Date(submittedAt.getTime() + eventRetentionMs),
       }], { session });
     });
     return result;

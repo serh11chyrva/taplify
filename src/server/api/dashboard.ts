@@ -10,6 +10,8 @@ import { publicSiteOrigin } from "@/server/env";
 import { dashboardFeatures } from "@/server/dashboard/features";
 import { directoryFilters } from "@/lib/dashboard/pages";
 import { leadFilters } from "@/lib/dashboard/leads";
+import { reportRange } from "@/lib/dashboard/analytics";
+import { loadAnalytics } from "@/server/dashboard/analytics";
 import { createDraft, listPages, readDraft, saveDraft } from "@/server/dashboard/pages";
 import { privateImage, uploadImage } from "@/server/dashboard/media";
 import { archivePage, publishPage, restorePage, unpublishPage } from "@/server/dashboard/publication";
@@ -74,6 +76,12 @@ dashboardApi.post("/:organizationId/select", async (c) => {
   selectOrganization(c, organization.id);
   return c.json(organization);
 });
+dashboardApi.get("/:organizationId/analytics", async (c) => c.json(await loadAnalytics(
+  c.get("userId"), c.req.param("organizationId"), reportRange(c.req.query()),
+)));
+dashboardApi.get("/:organizationId/pages/:pageId/analytics", async (c) => c.json(await loadAnalytics(
+  c.get("userId"), c.req.param("organizationId"), reportRange(c.req.query()), c.req.param("pageId"),
+)));
 
 dashboardApi.get("/:organizationId/pages", async (c) => c.json(await listPages(
   c.get("userId"), c.req.param("organizationId"), directoryFilters(c.req.query()),

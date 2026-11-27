@@ -28,6 +28,24 @@ export class PageEventRecord {
   @prop({ type: () => String })
   public pageViewId?: string;
 
+  @prop({ type: () => String })
+  public visitorKey?: string;
+
+  @prop({ type: () => String })
+  public referrer?: string;
+
+  @prop({ type: () => String })
+  public utmSource?: string;
+
+  @prop({ type: () => String })
+  public utmMedium?: string;
+
+  @prop({ type: () => String })
+  public utmCampaign?: string;
+
+  @prop({ type: () => String })
+  public linkLabel?: string;
+
   @prop({ type: () => Date, required: true })
   public occurredAt!: Date;
 

@@ -37,10 +37,14 @@ export function analyticsChoice(visitor: string | undefined, declined: string | 
   return consentedBrowser(visitor) ? "granted" : "unanswered";
 }
 
-export function organizationVisitor(request: Request, organizationId: string) {
+export function requestBrowser(request: Request) {
   const cookies = request.headers.get("cookie")?.split(";").map((item) => item.trim());
   if (cookies?.includes(`${pageAnalyticsDeclineCookie}=1`)) return undefined;
-  const browser = consentedBrowser(cookies?.find((item) => item.startsWith(`${pageAnalyticsCookie}=`))?.slice(pageAnalyticsCookie.length + 1));
+  return consentedBrowser(cookies?.find((item) => item.startsWith(`${pageAnalyticsCookie}=`))?.slice(pageAnalyticsCookie.length + 1));
+}
+
+export function organizationVisitor(request: Request, organizationId: string) {
+  const browser = requestBrowser(request);
   if (!browser) return undefined;
   return createHmac("sha256", secret()).update(`organization:${organizationId}:${browser}`).digest("base64url");
 }

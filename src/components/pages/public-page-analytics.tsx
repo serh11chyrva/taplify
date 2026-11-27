@@ -1,12 +1,17 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore, type MouseEvent, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { pageAnalyticsSeconds, type PageAnalyticsChoice } from "@/lib/dashboard/analytics-consent";
 import { dashboardRequest, jsonRequest, requestMessage } from "@/lib/dashboard/request";
 
 const preferenceKey = "taplify:page-analytics-preference";
 const choiceEvent = "taplify:page-analytics-change";
+const CurrentPageView = createContext<() => string | undefined>(() => undefined);
+
+export function usePageView() {
+  return useContext(CurrentPageView);
+}
 
 function subscribe(callback: () => void) {
   function storageChanged(event: StorageEvent) {
@@ -39,13 +44,63 @@ function rememberChoice(choice: "granted" | "declined") {
   }
 }
 
-export function PublicPageAnalytics({ initial, children }: { initial: PageAnalyticsChoice; children: ReactNode }) {
+function acquisitionSource() {
+  const url = new URL(window.location.href);
+  let referrer: string | undefined;
+  try {
+    const previous = new URL(document.referrer);
+    if (previous.origin !== url.origin && /^[a-z0-9.-]{1,253}$/.test(previous.hostname)) referrer = previous.hostname;
+  } catch {
+    // Direct traffic has no referrer.
+  }
+  const campaign = (key: string) => {
+    const value = url.searchParams.get(key)?.trim();
+    return value && /^[a-zA-Z0-9][a-zA-Z0-9 ._-]{0,79}$/.test(value) ? value : undefined;
+  };
+  return { referrer, utmSource: campaign("utm_source"), utmMedium: campaign("utm_medium"), utmCampaign: campaign("utm_campaign") };
+}
+
+function sendEvent(slug: string, input: object) {
+  if (storedChoice() === "declined") return;
+  void fetch(`/api/public/pages/${slug}/events`, {
+    ...jsonRequest("POST", input), keepalive: true,
+  }).catch(() => {});
+}
+
+export function PublicPageAnalytics({ initial, slug, publicationVersion, children }: {
+  initial: PageAnalyticsChoice; slug: string; publicationVersion: number; children: ReactNode;
+}) {
   const [decision, setDecision] = useState<PageAnalyticsChoice>();
   const stored = useSyncExternalStore(subscribe, storedChoice, () => undefined);
   const choice = stored === "declined" ? "declined" : decision ?? initial;
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const dialog = useRef<HTMLDialogElement>(null);
+  const visit = useRef<{ id: string; slug: string; publicationVersion: number } | null>(null);
+
+  useEffect(() => {
+    if (choice !== "granted") {
+      visit.current = null;
+      return;
+    }
+    if (visit.current?.slug === slug && visit.current.publicationVersion === publicationVersion) return;
+    const id = crypto.randomUUID();
+    visit.current = { id, slug, publicationVersion };
+    sendEvent(slug, { type: "view", eventId: id, pageViewId: id, publicationVersion, source: acquisitionSource() });
+  }, [choice, slug, publicationVersion]);
+
+  function currentPageView() {
+    return choice === "granted" && storedChoice() !== "declined" ? visit.current?.id : undefined;
+  }
+
+  function trackLink(event: MouseEvent<HTMLDivElement>) {
+    if (event.type === "auxclick" && event.button !== 1) return;
+    const pageViewId = currentPageView();
+    const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[data-page-link]") : null;
+    if (pageViewId && link?.dataset.pageLink) sendEvent(slug, {
+      type: "click", eventId: crypto.randomUUID(), pageViewId, publicationVersion, linkId: link.dataset.pageLink,
+    });
+  }
 
   async function update(granted: boolean) {
     if (pending) return;
@@ -79,7 +134,9 @@ export function PublicPageAnalytics({ initial, children }: { initial: PageAnalyt
 
   return (
     <>
-      {children}
+      <CurrentPageView.Provider value={currentPageView}>
+        <div onClickCapture={trackLink} onAuxClickCapture={trackLink}>{children}</div>
+      </CurrentPageView.Provider>
       <div className="mx-auto max-w-lg px-5 pb-7 text-sm">
         <button type="button" className="rounded underline underline-offset-4" onClick={() => dialog.current?.showModal()}>Page analytics settings</button>
       </div>
