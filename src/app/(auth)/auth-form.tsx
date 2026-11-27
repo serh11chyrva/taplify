@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useId, useState, type FormEvent, type KeyboardEvent, type PointerEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
+import { authDestination } from "@/lib/dashboard-destination";
 import styles from "./auth.module.css";
 
 type AuthMethod = "email" | "google";
@@ -124,11 +125,12 @@ function PasswordField({
   );
 }
 
-export function AuthForm({ signUp, emailEnabled, googleEnabled, googleCallbackFailed }: {
+export function AuthForm({ signUp, emailEnabled, googleEnabled, googleCallbackFailed, destination }: {
   signUp: boolean;
   emailEnabled: boolean;
   googleEnabled: boolean;
   googleCallbackFailed: boolean;
+  destination: string;
 }) {
   const id = useId();
   const termsId = `${id}-terms`;
@@ -199,7 +201,7 @@ export function AuthForm({ signUp, emailEnabled, googleEnabled, googleCallbackFa
         : await authClient.signIn.email({ email, password });
 
       if (result.data?.token) {
-        window.location.replace("/dashboard");
+        window.location.replace(destination);
         return;
       }
       setError({ method: "email", message: emailErrorMessage(signUp, result.error ?? undefined) });
@@ -217,8 +219,8 @@ export function AuthForm({ signUp, emailEnabled, googleEnabled, googleCallbackFa
     try {
       const { data } = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/dashboard",
-        errorCallbackURL: signUp ? "/sign-up" : "/sign-in",
+        callbackURL: destination,
+        errorCallbackURL: authDestination(signUp ? "/sign-up" : "/sign-in", destination),
       });
       if (data?.redirect && data.url) return;
       setError({ method: "google", message: googleError });
