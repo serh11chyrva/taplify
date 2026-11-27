@@ -163,3 +163,49 @@ test("validates form versions and records a submission once", async ({ context }
   expect(unpublish.status()).toBe(200);
   expect((await context.request.post(`${publicApi}/submissions`, { data })).status()).toBe(404);
 });
+
+test("collects consented views across pages and stops after withdrawal", async ({ context, browser }) => {
+  test.skip(process.env.PAGE_ANALYTICS_ENABLED !== "true", "Requires the page analytics release");
+  const { organizationId, page: dashboard } = await register(context);
+  const api = `/api/organizations/${organizationId}`;
+  const slugs = [`traffic-one-${randomUUID()}`, `traffic-two-${randomUUID()}`];
+  for (const slug of slugs) {
+    const draft = await context.request.post(`${api}/pages`, { data: { name: slug, type: "Personal", requestId: randomUUID() } });
+    expect(draft.status()).toBe(201);
+    const { id } = await draft.json();
+    expect((await context.request.post(`${api}/pages/${id}/publish`, { data: { expectedRevision: 1, slug } })).status()).toBe(200);
+  }
+  const guest = await browser.newContext({ baseURL: origin });
+  try {
+    const visitor = await guest.newPage();
+    const endpoint = (slug: string) => `/api/public/pages/${slug}/events`;
+    const syntheticView = (slug: string) => {
+      const id = randomUUID();
+      return guest.request.post(endpoint(slug), { data: { type: "view", eventId: id, pageViewId: id, publicationVersion: 1 } });
+    };
+    await visitor.goto(`/p/${slugs[0]}?utm_source=Newsletter`);
+    expect(await (await syntheticView(slugs[0])).json()).toEqual({ recorded: false });
+    const first = visitor.waitForResponse((response) => response.url().endsWith(endpoint(slugs[0])));
+    await visitor.getByRole("button", { name: "Allow page analytics", exact: true }).click();
+    const viewed = await first;
+    expect(await viewed.json()).toEqual({ recorded: true });
+    expect((await guest.request.post(endpoint(slugs[0]), { data: viewed.request().postDataJSON() })).status()).toBe(200);
+
+    const second = visitor.waitForResponse((response) => response.url().endsWith(endpoint(slugs[1])));
+    await visitor.goto(`/p/${slugs[1]}`);
+    expect((await second).status()).toBe(200);
+    await visitor.getByRole("button", { name: "Page analytics settings" }).click();
+    await visitor.getByRole("button", { name: "Decline page analytics", exact: true }).click();
+    await expect(visitor.getByRole("dialog", { name: "Page analytics settings" })).not.toBeVisible();
+    expect(await (await syntheticView(slugs[1])).json()).toEqual({ recorded: false });
+    const result = await context.request.get(`${api}/analytics?range=7`);
+    expect(result.status()).toBe(200);
+    expect(await result.json()).toMatchObject({
+      report: { totals: { views: 2, uniqueVisitors: 1 }, campaigns: [{ label: "Newsletter", count: 1 }] },
+    });
+    await dashboard.goto(`/dashboard/${organizationId}/analytics?range=7`);
+    await expect(dashboard.getByRole("heading", { name: "Organization analytics" })).toBeVisible();
+  } finally {
+    await guest.close();
+  }
+});

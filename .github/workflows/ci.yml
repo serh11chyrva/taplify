@@ -90,6 +90,8 @@ jobs:
       TAPLIFY_DASHBOARD_E2E: "true"
       DASHBOARD_ENABLED: "true"
       PAGE_FORMS_ENABLED: "true"
+      PAGE_ANALYTICS_ENABLED: "true"
+      PAGE_ANALYTICS_SECRET: dashboard-browser-tests-use-a-page-metrics-key
       MONGODB_URI: mongodb://127.0.0.1:27017/taplify_dashboard_test?replicaSet=taplify&directConnection=true
       MONGODB_DB_NAME: taplify_dashboard_test
       BETTER_AUTH_URL: http://127.0.0.1:3000

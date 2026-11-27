@@ -31,6 +31,8 @@ Open [localhost:3000](http://localhost:3000). The landing page and health endpoi
 | `NEXT_PUBLIC_GA4_MEASUREMENT_ID` | Optional GA4 web stream ID (`G-…`). Set it before building. |
 | `DASHBOARD_ENABLED` | Set to `true` to open the workspace dashboard and its authoring API. |
 | `PAGE_FORMS_ENABLED` | Enables the contact form builder, public submissions, and the page lead inbox. |
+| `PAGE_ANALYTICS_ENABLED` | Enables public page analytics and organization and page reports. |
+| `PAGE_ANALYTICS_SECRET` | Independent random secret of at least 32 characters for page analytics cookies and organization-scoped visitor identifiers. |
 | `PUBLIC_SITE_ORIGIN` | Canonical origin for published links. Defaults to the authentication origin. |
 | `BLOB_READ_WRITE_TOKEN` | Token for a private Vercel Blob store, required for page images. |
 
@@ -50,7 +52,7 @@ Better Auth owns accounts, users, verification records, and sessions through its
 
 Taplify shows the cookie banner until a visitor records a choice. Without a measurement ID, the banner explains necessary cookies and **Manage Cookies** shows the necessary storage used by Taplify. If GA4 is enabled later, Taplify asks visitors who recorded a necessary-only choice for their analytics preference. The Google tag loads only after a visitor allows **Analytics**. Sign-in and session cookies work with any preference. Taplify stores the choice for 180 days in the current browser and origin. Increment `COOKIE_CONSENT_VERSION` when the purposes or recipients of optional data collection materially change, and update `/cookie-policy` to match the integrations offered.
 
-Use a GA4 web stream for Taplify and turn off **Enhanced measurement** in its stream settings. The app sends one `page_view` for each page after consent, including App Router navigation. When adding a page, update the measured paths in `TaplifyAnalytics` with a path suitable for analytics. The app reports unknown paths as `/404` so mistyped URLs stay out of GA4.
+Use a GA4 web stream for Taplify and turn off **Enhanced measurement** in its stream settings. The app sends a `page_view` for measured platform navigation after consent. Dashboard paths are reported as `/dashboard`. Published pages and invitation links use their own experience and are excluded from GA4.
 
 Set the measurement ID for the intended Vercel environment and redeploy to apply it. On a test deployment, use a test GA4 property and verify the current page and client-side navigations in DebugView. In the browser network panel, confirm that declining or withdrawing consent blocks further GA4 traffic, then check that Google sign-in still works.
 
@@ -132,6 +134,8 @@ Mongoose automatic index creation is disabled. `db:indexes` creates application 
 Apply the application indexes in the target database before enabling `DASHBOARD_ENABLED`. Use a test Atlas database and a private Blob store on Vercel Preview. Set `PUBLIC_SITE_ORIGIN` to the deployment's canonical origin, and verify sign-in, page creation, preview, guest publishing, and archive restoration. Disabling authoring keeps existing published pages available.
 
 Enable `PAGE_FORMS_ENABLED` after applying the lead, receipt, and event indexes. Submit an inquiry on a published test page and verify its receipt, inbox details, status, and filtered CSV. Removing a lead deletes its answers while keeping the successful submission count and duplicate-prevention receipt.
+
+Set `PAGE_ANALYTICS_SECRET` and enable `PAGE_ANALYTICS_ENABLED` after applying the event and expiration indexes. Page analytics has an independent consent choice. Report dates use UTC, and unique visitors are consenting browsers deduplicated across the pages of one organization. The identifier expires after 90 days, and event records expire after 90 days. Submissions count whether the visitor allows analytics or not.
 
 The Dashboard workflow in CI runs its browser checks against an isolated MongoDB replica set. It uses real email sign-in and tests publication, archive behavior, concurrent draft saves, organization isolation, and replay-safe forms with filtered CSV.
 
