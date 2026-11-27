@@ -5,6 +5,6 @@ import { dashboardRead, workspace } from "@/server/dashboard/read";
 export default async function EditorPage({ params }: { params: Promise<{ organizationId: string; pageId: string }> }) {
   const { organizationId, pageId } = await params;
   const { user } = await workspace(organizationId, "draft:write");
-  const { draft, revision } = await dashboardRead(() => readDraft(user.id, organizationId, pageId));
-  return <PageEditor key={pageId} organizationId={organizationId} pageId={pageId} draft={draft} revision={revision} />;
+  const { draft, revision, page } = await dashboardRead(() => readDraft(user.id, organizationId, pageId));
+  return <PageEditor key={pageId} organizationId={organizationId} page={page} draft={draft} revision={revision} />;
 }

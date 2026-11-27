@@ -38,6 +38,7 @@ function PageBlock({ block, preview, mediaBase }: { block: Block; preview: boole
     case "image":
       return <MediaFigure image={block.image} mediaBase={mediaBase} />;
     case "gallery":
+      if (!preview && !block.items.some((item) => item.assetId)) return null;
       return (
         <section className="space-y-3">
           {block.title && <h2 className="text-lg font-semibold">{block.title}</h2>}
@@ -45,6 +46,7 @@ function PageBlock({ block, preview, mediaBase }: { block: Block; preview: boole
         </section>
       );
     case "portfolio":
+      if (!preview && !block.items.length) return null;
       return (
         <section className="space-y-3">
           {block.title && <h2 className="text-lg font-semibold">{block.title}</h2>}
@@ -61,6 +63,7 @@ function PageBlock({ block, preview, mediaBase }: { block: Block; preview: boole
         </section>
       );
     case "markdown":
+      if (!preview && !block.text.trim()) return null;
       return (
         <section className="page-prose">
           <ReactMarkdown skipHtml disallowedElements={["img"]} urlTransform={(url) => contentLink(url) ?? ""}
@@ -93,6 +96,7 @@ function PageBlock({ block, preview, mediaBase }: { block: Block; preview: boole
         </header>
       );
     case "links":
+      if (!preview && !block.items.some((item) => item.label && item.url)) return null;
       return (
         <section className="space-y-3">
           {block.title && <h2 className="text-lg font-semibold">{block.title}</h2>}
@@ -105,6 +109,7 @@ function PageBlock({ block, preview, mediaBase }: { block: Block; preview: boole
         </section>
       );
     case "social":
+      if (!preview && !block.items.some((item) => item.url)) return null;
       return (
         <section className="space-y-3">
           {block.title && <h2 className="text-lg font-semibold">{block.title}</h2>}

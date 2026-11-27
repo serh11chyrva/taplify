@@ -6,6 +6,7 @@ import { organizationMediaPath } from "@/lib/dashboard/media";
 import { PublicationStatus } from "@/app/dashboard/_components/page-directory";
 import { pageSummary, readDraft } from "@/server/dashboard/pages";
 import { dashboardRead, workspace } from "@/server/dashboard/read";
+import { publicUrl } from "@/server/dashboard/publication";
 
 export default async function PageFocus({ params }: { params: Promise<{ organizationId: string; pageId: string }> }) {
   const { organizationId, pageId } = await params;
@@ -25,6 +26,9 @@ export default async function PageFocus({ params }: { params: Promise<{ organiza
           {draft && <div className="flex flex-wrap gap-2">
             <Button asChild><Link href={`${address}/editor`}>Edit page</Link></Button>
             <Button asChild variant="outline"><Link href={`${address}/preview`}>Preview</Link></Button>
+            {page.status === "published" && page.slug && <Button asChild variant="outline">
+              <a href={publicUrl(page.slug)} target="_blank" rel="noreferrer">View public page</a>
+            </Button>}
           </div>}
         </div>
         {draft && <div className="grid gap-3 rounded-2xl border bg-surface p-3">

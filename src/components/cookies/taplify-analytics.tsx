@@ -19,35 +19,37 @@ export function TaplifyAnalytics({
   store: ConsentStore;
 }) {
   const pathname = usePathname();
+  const platformPage = !pathname.startsWith("/p/") && !pathname.startsWith("/dashboard/invitations/");
   const [ready, setReady] = useState(false);
   const prepared = useRef(false);
   const lastPage = useRef<{ pathname: string; location: string } | null>(null);
 
   useLayoutEffect(() => {
-    if (allowed && !prepared.current) {
+    if (allowed && platformPage && !prepared.current) {
       prepareGoogleTag();
       prepared.current = true;
     }
-  }, [allowed]);
+  }, [allowed, platformPage]);
 
   useEffect(() => {
-    if (!allowed) {
+    if (!allowed || !platformPage) {
       lastPage.current = null;
       return;
     }
     if (!ready || lastPage.current?.pathname === pathname || !store.allowsAnalytics()) return;
 
     const origin = window.location.origin;
-    const location = `${origin}${measuredPaths.has(pathname) ? pathname : "/404"}`;
+    const measuredPath = pathname.startsWith("/dashboard/") ? "/dashboard" : measuredPaths.has(pathname) ? pathname : "/404";
+    const location = `${origin}${measuredPath}`;
     const referrer = lastPage.current?.location ?? (document.referrer ? new URL(document.referrer).origin : "");
     recordGoogleAnalyticsPage(measurementId, {
       page_location: location,
       page_referrer: referrer,
     }, lastPage.current === null);
     lastPage.current = { pathname, location };
-  }, [allowed, measurementId, pathname, ready, store]);
+  }, [allowed, measurementId, pathname, platformPage, ready, store]);
 
-  return allowed ? (
+  return allowed && platformPage ? (
     <Script
       src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
       strategy="afterInteractive"

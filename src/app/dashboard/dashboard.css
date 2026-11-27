@@ -64,6 +64,18 @@
 .dashboard-drawer[open] { display: flex; flex-direction: column; }
 .dashboard-drawer::backdrop { background: rgb(0 0 0 / 60%); }
 
+.dashboard-dialog {
+  width: min(26rem, calc(100vw - 2rem));
+  margin: auto;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  background: var(--surface);
+  color: var(--foreground);
+}
+
+.dashboard-dialog::backdrop { background: rgb(0 0 0 / 65%); }
+
 .taplify-markdown { min-width: 0; overflow-wrap: anywhere; }
 .taplify-markdown-content { min-height: 7rem; padding: 0.65rem; }
 

@@ -5,6 +5,7 @@ import type { PageType } from "@/lib/dashboard/pages";
 
 @index({ organizationId: 1, archivedAt: 1, updatedAt: -1, _id: 1 })
 @index({ organizationId: 1, createRequestId: 1 }, { unique: true, partialFilterExpression: { createRequestId: { $type: "string" } } })
+@index({ slug: 1 }, { unique: true, partialFilterExpression: { slug: { $type: "string" } } })
 @modelOptions({
   options: { customName: "TaplifyPage", allowMixed: Severity.ALLOW },
   schemaOptions: { collection: "pages", timestamps: true, autoIndex: false, bufferCommands: false },
@@ -33,6 +34,12 @@ export class TaplifyPage {
 
   @prop({ type: () => String })
   public slug?: string;
+
+  @prop({ type: () => Object })
+  public publishedDraft?: unknown;
+
+  @prop({ type: () => Number, default: 0 })
+  public publicationVersion!: number;
 
   @prop({ type: () => Date, default: null })
   public publishedAt?: Date | null;

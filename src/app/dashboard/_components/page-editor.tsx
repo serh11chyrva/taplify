@@ -7,16 +7,18 @@ import { Eye, GripVertical, Monitor, Plus, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageRenderer } from "@/components/pages/page-renderer";
 import { blockNames, createBlock, moveItem, type Block, type PageDraft } from "@/lib/dashboard/draft";
-import { pageApiPath, pagePath } from "@/lib/dashboard/pages";
+import { pageApiPath, pagePath, type PageSummary } from "@/lib/dashboard/pages";
 import { organizationMediaPath } from "@/lib/dashboard/media";
 import { DashboardRequestError, dashboardRequest, jsonRequest, requestMessage } from "@/lib/dashboard/request";
 import { BlockInspector, ItemControls, TextField } from "./block-inspector";
 import { AppearanceEditor } from "./appearance-editor";
+import { PublishButton } from "./publication-actions";
 
-export function PageEditor({ organizationId, pageId, draft: initial, revision: initialRevision }: {
-  organizationId: string; pageId: string; draft: PageDraft; revision: number;
+export function PageEditor({ organizationId, page, draft: initial, revision: initialRevision }: {
+  organizationId: string; page: PageSummary; draft: PageDraft; revision: number;
 }) {
   const router = useRouter();
+  const pageId = page.id;
   const [draft, setDraft] = useState(initial);
   const [revision, setRevision] = useState(initialRevision);
   const [selected, setSelected] = useState(initial.blocks[0]?.id);
@@ -112,6 +114,7 @@ export function PageEditor({ organizationId, pageId, draft: initial, revision: i
             <Button asChild variant="outline"><Link href={`${pagePath(organizationId, pageId)}/preview`}><Eye size={16} aria-hidden="true" /> Preview</Link></Button>}
           {conflict && <Button type="button" variant="outline" disabled={saving || uploading} onClick={() => void reload()}>Load latest draft</Button>}
           <Button type="button" disabled={!dirty || saving || uploading} onClick={() => void save()}>{saving ? "Saving…" : "Save draft"}</Button>
+          <PublishButton page={page} revision={revision} api={api} disabled={dirty || saving || uploading || conflict} />
         </div>
       </div>
       {feedback && <p role={feedback.error ? "alert" : "status"} className={feedback.error ? "text-sm text-danger" : "text-sm text-muted-foreground"}>{feedback.message}</p>}

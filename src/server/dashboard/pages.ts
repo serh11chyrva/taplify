@@ -28,7 +28,7 @@ export async function listPages(userId: string, organizationId: string, filters:
   };
   const pages = getPageModel();
   const [items, total] = await Promise.all([
-    pages.find(query).select("-draft").sort({ updatedAt: -1, _id: 1 }).skip((filters.page - 1) * size).limit(size).lean(),
+    pages.find(query).select("-draft -publishedDraft").sort({ updatedAt: -1, _id: 1 }).skip((filters.page - 1) * size).limit(size).lean(),
     pages.countDocuments(query),
   ]);
   return { items: items.map(summarize), total, size };
@@ -50,7 +50,7 @@ export async function pageSummary(userId: string, organizationId: string, pageId
 export async function sidebarPages(userId: string, organizationId: string) {
   await requireOrganization(userId, organizationId);
   const pages = await getPageModel().find({ organizationId, archivedAt: null })
-    .select("-draft").sort({ updatedAt: -1, _id: 1 }).limit(15).lean();
+    .select("-draft -publishedDraft").sort({ updatedAt: -1, _id: 1 }).limit(15).lean();
   return pages.map(summarize);
 }
 

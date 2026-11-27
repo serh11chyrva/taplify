@@ -20,6 +20,18 @@ export function getDatabaseEnv() {
   return databaseSchema.parse(process.env);
 }
 
+export function databaseConfigured() {
+  return databaseSchema.safeParse(process.env).success;
+}
+
+export function publicSiteOrigin() {
+  const url = new URL(process.env.PUBLIC_SITE_ORIGIN || process.env.BETTER_AUTH_URL || "http://localhost:3000");
+  if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || url.pathname !== "/" || url.search || url.hash) {
+    throw new Error("PUBLIC_SITE_ORIGIN must be an HTTP or HTTPS origin.");
+  }
+  return url.origin;
+}
+
 export function getAuthEnv() {
   return authSchema.parse(process.env);
 }

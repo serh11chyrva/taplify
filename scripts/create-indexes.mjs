@@ -19,6 +19,7 @@ try {
     { organizationId: 1, createRequestId: 1 },
     { unique: true, partialFilterExpression: { createRequestId: { $type: "string" } } },
   );
+  await db.collection("pages").createIndex({ slug: 1 }, { unique: true, partialFilterExpression: { slug: { $type: "string" } } });
   console.log("Application indexes created");
 } catch {
   console.error("Index creation failed. Check database access and existing indexes.");

@@ -10,6 +10,7 @@ import { dashboardFeatures } from "@/server/dashboard/features";
 import { directoryFilters } from "@/lib/dashboard/pages";
 import { createDraft, listPages, readDraft, saveDraft } from "@/server/dashboard/pages";
 import { privateImage, uploadImage } from "@/server/dashboard/media";
+import { publishPage, unpublishPage } from "@/server/dashboard/publication";
 
 type DashboardApi = { Variables: { userId: string } };
 
@@ -86,3 +87,9 @@ dashboardApi.post("/:organizationId/media", async (c) => c.json(await uploadImag
 dashboardApi.get("/:organizationId/media/:assetId", (c) => privateImage(
   c.get("userId"), c.req.param("organizationId"), c.req.param("assetId"),
 ));
+dashboardApi.post("/:organizationId/pages/:pageId/publish", async (c) => c.json(await publishPage(
+  c.get("userId"), c.req.param("organizationId"), c.req.param("pageId"), await jsonBody(c.req.raw),
+)));
+dashboardApi.post("/:organizationId/pages/:pageId/unpublish", async (c) => c.json(await unpublishPage(
+  c.get("userId"), c.req.param("organizationId"), c.req.param("pageId"),
+)));
