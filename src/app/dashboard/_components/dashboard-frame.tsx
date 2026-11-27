@@ -3,7 +3,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronRight, CircleUserRound, Files, LayoutDashboard, Menu, PanelLeftClose, PanelLeftOpen, Settings2, X } from "lucide-react";
+import { ChartNoAxesColumnIncreasing, ChevronRight, CircleUserRound, Files, LayoutDashboard, Menu, PanelLeftClose, PanelLeftOpen, Settings2, X } from "lucide-react";
 import { TaplifyIcon } from "@/app/_landing/taplify-icon";
 import { Button } from "@/components/ui/button";
 import { SignOut } from "@/components/auth/sign-out";
@@ -15,11 +15,12 @@ import { cn } from "@/lib/utils";
 
 type Account = { name: string; email: string };
 
-export function DashboardFrame({ organization, organizations, account, projects, children }: {
+export function DashboardFrame({ organization, organizations, account, projects, analytics, children }: {
   organization: OrganizationSummary;
   organizations: OrganizationSummary[];
   account: Account;
   projects: PageSummary[];
+  analytics: boolean;
   children: ReactNode;
 }) {
   const router = useRouter();
@@ -31,7 +32,8 @@ export function DashboardFrame({ organization, organizations, account, projects,
   const home = organizationPath(organization.id);
   const pageId = pathname.startsWith(`${home}/pages/`) ? pathname.split("/")[4] : undefined;
   const page = projects.find((item) => item.id === pageId);
-  const current = page?.name ?? (pathname.endsWith("/settings") ? "Settings" : pathname.endsWith("/new") ? "New page" : "Dashboard");
+  const current = page?.name ?? (pathname.endsWith("/settings") ? "Settings" :
+    pathname.endsWith("/analytics") ? "Analytics" : pathname.endsWith("/new") ? "New page" : "Dashboard");
 
   async function switchOrganization(nextId: string) {
     if (switching || nextId === organization.id) return;
@@ -61,6 +63,10 @@ export function DashboardFrame({ organization, organizations, account, projects,
             className="dashboard-nav-link" onClick={() => mobileMenu.current?.close()}>
             <LayoutDashboard size={16} aria-hidden="true" /><span className={compact ? "sr-only" : ""}>Dashboard</span>
           </Link>
+          {analytics && <Link href={`${home}/analytics`} aria-current={pathname === `${home}/analytics` ? "page" : undefined}
+            title={compact ? "Analytics" : undefined} className="dashboard-nav-link" onClick={() => mobileMenu.current?.close()}>
+            <ChartNoAxesColumnIncreasing size={16} aria-hidden="true" /><span className={compact ? "sr-only" : ""}>Analytics</span>
+          </Link>}
         </nav>
         {projects.length > 0 && (
           <nav aria-label="Projects" className="grid gap-1 border-t pt-3">

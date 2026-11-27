@@ -12,7 +12,9 @@ export default async function ProjectLayout({ params, children }: {
   const page = await dashboardRead(() => pageSummary(user.id, organizationId, pageId));
   const tabs = [{ label: "Focus", segment: "focus" }];
   if (page.status !== "archived") tabs.push({ label: "Editor", segment: "editor" });
-  if (dashboardFeatures().forms) tabs.push({ label: "Leads", segment: "leads" });
+  const features = dashboardFeatures();
+  if (features.forms) tabs.push({ label: "Leads", segment: "leads" });
+  if (features.analytics) tabs.push({ label: "Analytics", segment: "analytics" });
   tabs.push({ label: "Settings", segment: "settings" });
   return <><PageTabs base={pagePath(organizationId, pageId)} tabs={tabs} />{children}</>;
 }

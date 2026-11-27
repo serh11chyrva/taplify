@@ -3,16 +3,22 @@ import { Button } from "@/components/ui/button";
 import { PageRenderer } from "@/components/pages/page-renderer";
 import { pagePath } from "@/lib/dashboard/pages";
 import { organizationMediaPath } from "@/lib/dashboard/media";
+import { reportRange } from "@/lib/dashboard/analytics";
 import { PublicationStatus } from "@/app/dashboard/_components/page-directory";
 import { pageSummary, readDraft } from "@/server/dashboard/pages";
 import { dashboardRead, workspace } from "@/server/dashboard/read";
 import { publicUrl } from "@/server/dashboard/publication";
+import { loadAnalytics } from "@/server/dashboard/analytics";
+import { dashboardFeatures } from "@/server/dashboard/features";
 
 export default async function PageFocus({ params }: { params: Promise<{ organizationId: string; pageId: string }> }) {
   const { organizationId, pageId } = await params;
   const { user } = await workspace(organizationId);
   const page = await dashboardRead(() => pageSummary(user.id, organizationId, pageId));
-  const draft = page.status === "archived" ? null : (await dashboardRead(() => readDraft(user.id, organizationId, pageId))).draft;
+  const [draft, analytics] = await dashboardRead(() => Promise.all([
+    page.status === "archived" ? null : readDraft(user.id, organizationId, pageId).then((result) => result.draft),
+    dashboardFeatures().analytics ? loadAnalytics(user.id, organizationId, reportRange({ range: "7" }), pageId) : null,
+  ]));
   const address = pagePath(organizationId, pageId);
   return (
     <section>
@@ -30,6 +36,14 @@ export default async function PageFocus({ params }: { params: Promise<{ organiza
               <a href={publicUrl(page.slug)} target="_blank" rel="noreferrer">View public page</a>
             </Button>}
           </div>}
+          {analytics && <section className="space-y-3 border-t pt-4">
+            <h2 className="font-semibold">Last 7 days</h2>
+            <dl className="grid grid-cols-2 gap-2 text-sm">
+              <div><dt className="text-muted-foreground">Views</dt><dd className="text-lg font-semibold">{analytics.report.totals.views}</dd></div>
+              <div><dt className="text-muted-foreground">Submissions</dt><dd className="text-lg font-semibold">{analytics.report.totals.submissions}</dd></div>
+            </dl>
+            <Link href={`${address}/analytics?range=7`} className="text-sm underline underline-offset-4">View analytics</Link>
+          </section>}
         </div>
         {draft && <div className="grid gap-3 rounded-2xl border bg-surface p-3">
           <h2 className="text-sm font-medium">Saved preview</h2>
