@@ -25,6 +25,27 @@ export type LeadFilters = {
   page: number;
 };
 
+export type LeadColumn = { key: string; label: string };
+export const systemLeadColumns: LeadColumn[] = [
+  { key: "status", label: "Status" }, { key: "read", label: "Read state" },
+  { key: "submittedAt", label: "Submitted (UTC)" }, { key: "source", label: "Source" },
+  { key: "formVersion", label: "Form version" },
+];
+
+export function leadColumnValue(lead: Lead, key: string) {
+  switch (key) {
+    case "status": return leadStatusLabels[lead.status];
+    case "read": return lead.readAt ? "Read" : "Unread";
+    case "submittedAt": return lead.submittedAt;
+    case "source": return lead.source ?? "";
+    case "formVersion": return String(lead.formVersion);
+    default: {
+      const answer = lead.answers.find((item) => key === `answer:${item.id}`)?.value;
+      return Array.isArray(answer) ? answer.join(", ") : answer ?? "";
+    }
+  }
+}
+
 export function utcDate(value: unknown) {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
   const date = new Date(`${value}T00:00:00.000Z`);

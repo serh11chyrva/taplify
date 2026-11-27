@@ -130,7 +130,7 @@ test("validates form versions and records a submission once", async ({ context }
 
   const publicApi = `/api/public/pages/${slug}`;
   const { version } = await (await context.request.get(`${publicApi}/form`)).json();
-  const data = { submissionId: randomUUID(), formVersion: version, answers: { [email.id]: "visitor@example.test", [message.id]: "Hello" } };
+  const data = { submissionId: randomUUID(), formVersion: version, answers: { [email.id]: "visitor@example.test", [message.id]: "=1+1" } };
   expect((await context.request.post(`${publicApi}/submissions`, { data: { ...data, formVersion: version + 1 } })).status()).toBe(409);
   expect((await context.request.post(`${publicApi}/submissions`, { data: { ...data, answers: { [email.id]: "invalid" } } })).status()).toBe(422);
   const delivery = await Promise.all([
@@ -146,6 +146,14 @@ test("validates form versions and records a submission once", async ({ context }
   const updated = await context.request.patch(leadUrl, { data: { status: "in_progress", read: true } });
   expect(updated.status()).toBe(200);
   expect(await updated.json()).toMatchObject({ status: "in_progress", readAt: expect.any(String), formVersion: version });
+  const columns = `${route}/lead-columns`;
+  expect((await context.request.put(columns, { data: { columns: [`answer:${email.id}`, "status"] } })).status()).toBe(200);
+  expect(await (await context.request.get(columns)).json()).toMatchObject({ selected: [`answer:${email.id}`, "status"], automatic: false });
+  const exported = await context.request.get(`${route}/leads/export?status=in_progress`);
+  expect(exported.status()).toBe(200);
+  expect(await exported.text()).toContain(`"'=1+1"`);
+  const otherStatus = await context.request.get(`${route}/leads/export?status=closed`);
+  expect(await otherStatus.text()).not.toContain("visitor@example.test");
 
   const [submission, unpublish] = await Promise.all([
     context.request.post(`${publicApi}/submissions`, { data: { ...data, submissionId: randomUUID() } }),

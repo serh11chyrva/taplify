@@ -27,6 +27,7 @@ try {
   await db.collection("page_events").createIndex({ organizationId: 1, pageId: 1, occurredAt: 1 });
   await db.collection("page_events").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
   await db.collection("public_rate_limits").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+  await db.collection("lead_columns").createIndex({ organizationId: 1, pageId: 1, userId: 1 }, { unique: true });
   console.log("Application indexes created");
 } catch {
   console.error("Index creation failed. Check database access and existing indexes.");

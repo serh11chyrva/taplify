@@ -30,6 +30,7 @@ Open [localhost:3000](http://localhost:3000). The landing page and health endpoi
 | `GOOGLE_CLIENT_SECRET` | Optional Google OAuth client secret. |
 | `NEXT_PUBLIC_GA4_MEASUREMENT_ID` | Optional GA4 web stream ID (`G-…`). Set it before building. |
 | `DASHBOARD_ENABLED` | Set to `true` to open the workspace dashboard and its authoring API. |
+| `PAGE_FORMS_ENABLED` | Enables the contact form builder, public submissions, and the page lead inbox. |
 | `PUBLIC_SITE_ORIGIN` | Canonical origin for published links. Defaults to the authentication origin. |
 | `BLOB_READ_WRITE_TOKEN` | Token for a private Vercel Blob store, required for page images. |
 
@@ -130,7 +131,9 @@ Mongoose automatic index creation is disabled. `db:indexes` creates application 
 
 Apply the application indexes in the target database before enabling `DASHBOARD_ENABLED`. Use a test Atlas database and a private Blob store on Vercel Preview. Set `PUBLIC_SITE_ORIGIN` to the deployment's canonical origin, and verify sign-in, page creation, preview, guest publishing, and archive restoration. Disabling authoring keeps existing published pages available.
 
-The Dashboard workflow in CI runs its browser checks against an isolated MongoDB replica set. It uses real email sign-in and tests publication, archive behavior, concurrent draft saves, and organization isolation.
+Enable `PAGE_FORMS_ENABLED` after applying the lead, receipt, and event indexes. Submit an inquiry on a published test page and verify its receipt, inbox details, status, and filtered CSV. Removing a lead deletes its answers while keeping the successful submission count and duplicate-prevention receipt.
+
+The Dashboard workflow in CI runs its browser checks against an isolated MongoDB replica set. It uses real email sign-in and tests publication, archive behavior, concurrent draft saves, organization isolation, and replay-safe forms with filtered CSV.
 
 ## Vercel
 

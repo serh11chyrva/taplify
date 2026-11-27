@@ -14,6 +14,7 @@ import { createDraft, listPages, readDraft, saveDraft } from "@/server/dashboard
 import { privateImage, uploadImage } from "@/server/dashboard/media";
 import { archivePage, publishPage, restorePage, unpublishPage } from "@/server/dashboard/publication";
 import { listLeads, readLead, removeLead, updateLead } from "@/server/dashboard/leads";
+import { leadColumns, leadExport, setLeadColumns } from "@/server/dashboard/lead-columns";
 
 type DashboardApi = { Variables: { userId: string } };
 
@@ -106,6 +107,15 @@ dashboardApi.post("/:organizationId/pages/:pageId/restore", async (c) => c.json(
 )));
 dashboardApi.get("/:organizationId/pages/:pageId/leads", async (c) => c.json(await listLeads(
   c.get("userId"), c.req.param("organizationId"), c.req.param("pageId"), leadFilters(c.req.query()),
+)));
+dashboardApi.get("/:organizationId/pages/:pageId/leads/export", (c) => leadExport(
+  c.get("userId"), c.req.param("organizationId"), c.req.param("pageId"), leadFilters(c.req.query()),
+));
+dashboardApi.get("/:organizationId/pages/:pageId/lead-columns", async (c) => c.json(await leadColumns(
+  c.get("userId"), c.req.param("organizationId"), c.req.param("pageId"),
+)));
+dashboardApi.put("/:organizationId/pages/:pageId/lead-columns", async (c) => c.json(await setLeadColumns(
+  c.get("userId"), c.req.param("organizationId"), c.req.param("pageId"), await jsonBody(c.req.raw),
 )));
 dashboardApi.get("/:organizationId/pages/:pageId/leads/:leadId", async (c) => c.json(await readLead(
   c.get("userId"), c.req.param("organizationId"), c.req.param("pageId"), c.req.param("leadId"),

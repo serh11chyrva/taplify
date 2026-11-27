@@ -1,18 +1,29 @@
 import Link from "next/link";
-import { Inbox, Search } from "lucide-react";
+import { Download, Inbox, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { leadQueryString, leadStatusLabels, leadTitle, type Lead, type LeadFilters } from "@/lib/dashboard/leads";
+import { leadColumnValue, leadQueryString, leadStatusLabels, leadTitle, type Lead, type LeadColumn, type LeadFilters } from "@/lib/dashboard/leads";
+import { LeadColumnPicker } from "./lead-column-picker";
 
 const date = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" });
 
-export function LeadInbox({ base, filters, items, size, total }: {
-  base: string; filters: LeadFilters; items: Lead[]; size: number; total: number;
+export function LeadInbox({ base, api, canExport, columns, filters, items, size, total }: {
+  base: string; api: string; canExport: boolean; columns: { available: LeadColumn[]; selected: string[]; automatic: boolean };
+  filters: LeadFilters; items: Lead[]; size: number; total: number;
 }) {
   const query = leadQueryString(filters);
+  const selected = columns.selected.flatMap((key) => columns.available.filter((column) => column.key === key));
   const hasFilters = Boolean(filters.search || filters.status || filters.read || filters.from || filters.to);
   return (
     <section className="space-y-4">
-      <header><h1 className="text-3xl font-semibold tracking-tight">Leads</h1><p className="mt-1 text-sm text-muted-foreground">Inquiries from this page.</p></header>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div><h1 className="text-3xl font-semibold tracking-tight">Leads</h1><p className="mt-1 text-sm text-muted-foreground">Inquiries from this page.</p></div>
+        <div className="flex flex-wrap gap-2">
+          <LeadColumnPicker key={`${columns.automatic}:${columns.selected.join(",")}`} api={`${api}/lead-columns`} {...columns} />
+          {canExport && <Button asChild variant="outline" size="sm"><a href={`${api}/leads/export${query}`}>
+            <Download size={15} aria-hidden="true" /> Export CSV
+          </a></Button>}
+        </div>
+      </header>
       <form action={base} className="flex flex-wrap items-end gap-2 rounded-xl border bg-surface p-3">
         <label className="grid gap-1 text-xs text-muted-foreground">Search
           <input className="dashboard-input" name="search" placeholder="Search answers…" maxLength={100} defaultValue={filters.search} />
@@ -38,15 +49,18 @@ export function LeadInbox({ base, filters, items, size, total }: {
           <table className="w-full min-w-[34rem] text-left text-sm">
             <caption className="sr-only">Page inquiries</caption>
             <thead className="border-b bg-muted/50 text-xs text-muted-foreground">
-              <tr><th scope="col" className="p-3">Inquiry</th><th scope="col" className="p-3">Status</th><th scope="col" className="p-3">Read state</th><th scope="col" className="p-3">Submitted (UTC)</th></tr>
+              <tr><th scope="col" className="p-3">Inquiry</th>{selected.map((column) =>
+                <th key={column.key} scope="col" className="whitespace-nowrap p-3">{column.label}</th>)}</tr>
             </thead>
             <tbody className="divide-y">
               {items.map((lead) => (
                 <tr key={lead.id} className="hover:bg-muted/40">
                   <th className="max-w-60 truncate p-3" scope="row"><Link href={`${base}/${lead.id}${query}`} className="hover:underline">{leadTitle(lead)}</Link></th>
-                  <td className="p-3">{leadStatusLabels[lead.status]}</td>
-                  <td className="p-3">{lead.readAt ? "Read" : "Unread"}</td>
-                  <td className="p-3 text-muted-foreground"><time dateTime={lead.submittedAt}>{date.format(new Date(lead.submittedAt))}</time></td>
+                  {selected.map((column) => <td key={column.key} className="max-w-64 truncate p-3 text-muted-foreground">
+                    {column.key === "submittedAt"
+                      ? <time dateTime={lead.submittedAt}>{date.format(new Date(lead.submittedAt))}</time>
+                      : leadColumnValue(lead, column.key) || "—"}
+                  </td>)}
                 </tr>
               ))}
             </tbody>
