@@ -2,8 +2,13 @@
 
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
 import type { ReactNode } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { moveItem, socialNetworks, type Block } from "@/lib/dashboard/draft";
+
+const MarkdownInspector = dynamic(() => import("./markdown-inspector"), {
+  ssr: false, loading: () => <p role="status" className="text-sm text-muted-foreground">Loading Markdown editor…</p>,
+});
 
 export function TextField({ label, value, onChange, maxLength, multiline, type = "text" }: {
   label: string; value: string; onChange: (value: string) => void; maxLength?: number; multiline?: boolean; type?: "text" | "url";
@@ -60,6 +65,13 @@ export function RepeatableItems<T extends { id: string }>({ label, items, onChan
 
 export function BlockInspector({ block, onChange }: { block: Block; onChange: (block: Block) => void }) {
   switch (block.type) {
+    case "markdown":
+      return <MarkdownInspector value={block.text} onChange={(text) => onChange({ ...block, text })} />;
+    case "embed":
+      return <>
+        <TextField label="Title" value={block.title} maxLength={120} onChange={(title) => onChange({ ...block, title })} />
+        <TextField label="YouTube or Spotify URL" value={block.url} maxLength={2048} onChange={(url) => onChange({ ...block, url })} />
+      </>;
     case "profile":
       return <>
         <TextField label="Display name" value={block.name} maxLength={120} onChange={(name) => onChange({ ...block, name })} />

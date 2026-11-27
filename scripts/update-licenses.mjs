@@ -80,11 +80,13 @@ function isNoticeFile(path) {
 }
 
 function readmeLicensingSection(readme) {
-  const heading = /^(#{1,6})[\t ]+(?:(?:third[- ]party|open[- ]source)[\t ]+)?(?:licen[cs](?:es?|ing)|notices?|copyright)[\t ]*\r?$/im.exec(readme);
+  const heading = /^(#{1,6})[\t ]+(?:(?:third[- ]party|open[- ]source)[\t ]+)?(?:licen[cs](?:es?|ing)|notices?|copyright)[\t ]*\r?$/im.exec(readme)
+    ?? /^(?:licen[cs](?:es?|ing)|notices?|copyright)[\t ]*\r?\n(=+|-+)[\t ]*\r?$/im.exec(readme);
   if (!heading) return "";
 
   const bodyStart = heading.index + heading[0].length;
-  const nextSection = new RegExp(`^#{1,${heading[1].length}}[\\t ]+`, "m");
+  const headingLevel = heading[1].startsWith("#") ? heading[1].length : heading[1].startsWith("=") ? 1 : 2;
+  const nextSection = new RegExp(`^#{1,${headingLevel}}[\\t ]+|^.+\\r?\\n(?:=+|-+)[\\t ]*\\r?$`, "m");
   const bodyLength = readme.slice(bodyStart).search(nextSection);
   return readme.slice(heading.index, bodyLength === -1 ? undefined : bodyStart + bodyLength);
 }
@@ -147,7 +149,8 @@ async function readPackage(pkg) {
   const cachePath = new URL(`${cacheKey}.json`, cacheDirectory);
 
   try {
-    return JSON.parse(await readFile(cachePath, "utf8"));
+    const cached = JSON.parse(await readFile(cachePath, "utf8"));
+    if (Object.hasOwn(cached, "license")) return cached;
   } catch (error) {
     if (error.code !== "ENOENT" && !(error instanceof SyntaxError)) throw error;
   }
@@ -175,7 +178,7 @@ async function readPackage(pkg) {
   }
 
   const result = {
-    license: manifest.license,
+    license: manifest.license ?? (manifest.licenses?.length === 1 ? manifest.licenses[0]?.type : null) ?? null,
     notices: [...files.keys()].sort().map((path) => [path, files.get(path)]),
   };
   await replaceFile(cachePath, JSON.stringify(result));
@@ -225,7 +228,10 @@ for (let offset = 0; offset < packages.length; offset += downloadConcurrency) {
       manifestLicenses.push(`${label} — ${license}`);
     }
     for (const [path, content] of result.value.notices) {
-      addNotice(notices, `${label} (${path.replace(/^[^/]+\//, "")})`, content);
+      const notice = readmeFilename.test(path)
+        ? content.replace(/^([^\r\n]+)\r?\n(?:=+|-+)\r?\n/, "## $1\n")
+        : content;
+      addNotice(notices, `${label} (${path.replace(/^[^/]+\//, "")})`, notice);
     }
   }
 }

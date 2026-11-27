@@ -1,6 +1,10 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
+import ReactMarkdown from "react-markdown";
+import { accentText, appearanceFonts } from "@/lib/dashboard/appearance";
 import { contentLink, type Block, type PageDraft } from "@/lib/dashboard/draft";
 import { cn } from "@/lib/utils";
+import { PageEmbed } from "./page-embed";
+import "./page-renderer.css";
 
 export function ContentLink({ href, children, preview, className, itemId }: {
   href: string;
@@ -16,8 +20,19 @@ export function ContentLink({ href, children, preview, className, itemId }: {
 }
 
 function PageBlock({ block, preview }: { block: Block; preview: boolean }) {
-  const linkStyle = "flex w-full items-center justify-center gap-2 rounded-[var(--page-radius)] border border-current/20 px-4 py-3 text-sm font-medium";
+  const linkStyle = "page-action flex items-center justify-center gap-2 rounded-[var(--page-radius)] border px-4 py-3 text-sm font-medium";
   switch (block.type) {
+    case "markdown":
+      return (
+        <section className="page-prose">
+          <ReactMarkdown skipHtml disallowedElements={["img"]} urlTransform={(url) => contentLink(url) ?? ""}
+            components={{ a: ({ href, children }) => <ContentLink href={href ?? ""} preview={preview}>{children}</ContentLink> }}>
+            {block.text}
+          </ReactMarkdown>
+        </section>
+      );
+    case "embed":
+      return <PageEmbed url={block.url} title={block.title} itemId={block.id} preview={preview} />;
     case "profile":
       return (
         <header className="space-y-3 text-center">
@@ -34,7 +49,7 @@ function PageBlock({ block, preview }: { block: Block; preview: boolean }) {
           {block.heading && <h2 className="text-3xl font-semibold tracking-tight">{block.heading}</h2>}
           {block.description && <p className="whitespace-pre-wrap opacity-80">{block.description}</p>}
           {block.actionLabel && block.actionUrl && <ContentLink href={block.actionUrl} preview={preview} itemId={block.id}
-            className={cn(linkStyle, "bg-[var(--page-accent)] text-[var(--page-accent-text)]")}>{block.actionLabel}</ContentLink>}
+            className={cn(linkStyle, "page-action-accent")}>{block.actionLabel}</ContentLink>}
         </header>
       );
     case "links":
@@ -64,9 +79,16 @@ function PageBlock({ block, preview }: { block: Block; preview: boolean }) {
 }
 
 export function PageRenderer({ draft, preview = false }: { draft: PageDraft; preview?: boolean }) {
+  const { appearance } = draft;
+  const style = {
+    "--page-background": appearance.background, "--page-text": appearance.foreground,
+    "--page-accent": appearance.accent, "--page-accent-text": accentText(appearance.accent),
+    "--page-radius": `${appearance.radius}px`, fontFamily: appearanceFonts[appearance.font],
+  } as CSSProperties;
   return (
-    <article className="page-renderer min-h-96 overflow-hidden rounded-xl bg-white px-5 py-8 text-slate-950" aria-label={draft.name}>
-      <div className="mx-auto grid max-w-lg gap-7 overflow-wrap-anywhere">
+    <article className="page-renderer min-h-96 overflow-hidden rounded-xl px-5 py-8 sm:py-10" data-button={appearance.button} style={style}>
+      {preview ? null : <h1 className="sr-only">{draft.name}</h1>}
+      <div className="mx-auto grid max-w-lg gap-7">
         {draft.blocks.map((block) => <PageBlock key={block.id} block={block} preview={preview} />)}
       </div>
     </article>

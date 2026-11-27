@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { resourceId } from "./organizations";
 import { pageType } from "./pages";
+import { appearanceSchema, appearances } from "./appearance";
+import { embedSource } from "./embed";
 
 export const pageName = z.string().trim().min(1, "Enter a page name.").max(45);
 const bio = z.string().max(250);
@@ -35,10 +37,17 @@ const socialBlock = z.object({
   items: z.array(z.object({ id: resourceId, network: z.enum(socialNetworks), url: website })).max(15),
 });
 
-const block = z.discriminatedUnion("type", [profileBlock, heroBlock, linksBlock, socialBlock]);
+const markdownBlock = z.object({ id: resourceId, type: z.literal("markdown"), text: z.string().max(12000) });
+const embedBlock = z.object({
+  id: resourceId, type: z.literal("embed"), title: heading,
+  url: z.string().trim().max(2048).refine((url) => !url || embedSource(url) !== null, "Enter a supported YouTube or Spotify link.")
+    .transform((url) => embedSource(url)?.href ?? ""),
+});
+const block = z.discriminatedUnion("type", [profileBlock, heroBlock, linksBlock, socialBlock, markdownBlock, embedBlock]);
 
 export const draftSchema = z.object({
   name: pageName,
+  appearance: appearanceSchema.default(appearances.Paper),
   blocks: z.array(block).max(30).refine((blocks) => new Set(blocks.map((item) => item.id)).size === blocks.length,
     "Each block must have its own ID."),
 });
@@ -53,6 +62,7 @@ export type Block = z.infer<typeof block>;
 
 export const blockNames: Record<Block["type"], string> = {
   profile: "Profile", hero: "Hero", links: "Links", social: "Social links",
+  markdown: "Markdown", embed: "Embed",
 };
 
 export function createBlock(type: Block["type"]): Block {
@@ -62,6 +72,8 @@ export function createBlock(type: Block["type"]): Block {
     case "hero": return { id, type, heading: "", description: "", actionLabel: "", actionUrl: "" };
     case "links": return { id, type, title: "Links", layout: "list", items: [] };
     case "social": return { id, type, title: "Find me online", items: [] };
+    case "markdown": return { id, type, text: "" };
+    case "embed": return { id, type, title: "", url: "" };
   }
 }
 
@@ -70,7 +82,8 @@ export function initialDraft(name: string, type: z.infer<typeof pageType>, intro
     ? { id: crypto.randomUUID(), type: "profile", name, bio: intro }
     : { id: crypto.randomUUID(), type: "hero", heading: name, description: intro, actionLabel: "", actionUrl: "" };
   const links = createBlock("links");
-  return { name, blocks: [lead, links] };
+  const appearance = type === "Company" ? appearances.Graphite : type === "Product" ? appearances.Ocean : appearances.Paper;
+  return { name, blocks: [lead, links], appearance };
 }
 
 export function moveItem<T>(items: T[], index: number, next: number) {

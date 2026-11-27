@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GripVertical, Plus } from "lucide-react";
+import { Eye, GripVertical, Monitor, Plus, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageRenderer } from "@/components/pages/page-renderer";
 import { blockNames, createBlock, moveItem, type Block, type PageDraft } from "@/lib/dashboard/draft";
-import { pageApiPath } from "@/lib/dashboard/pages";
+import { pageApiPath, pagePath } from "@/lib/dashboard/pages";
 import { DashboardRequestError, dashboardRequest, jsonRequest, requestMessage } from "@/lib/dashboard/request";
 import { BlockInspector, ItemControls, TextField } from "./block-inspector";
+import { AppearanceEditor } from "./appearance-editor";
 
 export function PageEditor({ organizationId, pageId, draft: initial, revision: initialRevision }: {
   organizationId: string; pageId: string; draft: PageDraft; revision: number;
@@ -22,8 +24,33 @@ export function PageEditor({ organizationId, pageId, draft: initial, revision: i
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ message: string; error?: boolean }>();
   const [conflict, setConflict] = useState(false);
+  const [tab, setTab] = useState<"blocks" | "appearance">("blocks");
+  const [mobilePreview, setMobilePreview] = useState(false);
   const api = pageApiPath(organizationId, pageId);
   const active = draft.blocks.find((block) => block.id === selected) ?? draft.blocks[0];
+
+  useEffect(() => {
+    if (!dirty) return;
+    const warnOnUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    const warnOnLink = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
+      if (link && link.target !== "_blank" && link.origin === window.location.origin && link.href !== window.location.href
+          && !window.confirm("Leave the editor with unsaved changes?")) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+    window.addEventListener("beforeunload", warnOnUnload);
+    document.addEventListener("click", warnOnLink, true);
+    return () => {
+      window.removeEventListener("beforeunload", warnOnUnload);
+      document.removeEventListener("click", warnOnLink, true);
+    };
+  }, [dirty]);
 
   function change(next: PageDraft) {
     setDraft(next);
@@ -79,13 +106,25 @@ export function PageEditor({ organizationId, pageId, draft: initial, revision: i
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div><h1 className="text-3xl font-semibold tracking-tight">Editor</h1><p className="mt-1 text-sm text-muted-foreground">{draft.name}</p></div>
         <div className="flex flex-wrap items-center gap-2">
+          {dirty || saving ? <Button type="button" variant="outline" disabled><Eye size={16} aria-hidden="true" /> Preview</Button> :
+            <Button asChild variant="outline"><Link href={`${pagePath(organizationId, pageId)}/preview`}><Eye size={16} aria-hidden="true" /> Preview</Link></Button>}
           {conflict && <Button type="button" variant="outline" disabled={saving} onClick={() => void reload()}>Load latest draft</Button>}
           <Button type="button" disabled={!dirty || saving} onClick={() => void save()}>{saving ? "Saving…" : "Save draft"}</Button>
         </div>
       </div>
       {feedback && <p role={feedback.error ? "alert" : "status"} className={feedback.error ? "text-sm text-danger" : "text-sm text-muted-foreground"}>{feedback.message}</p>}
       <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(21rem,1fr)_minmax(20rem,1fr)]">
-        <fieldset className="grid min-w-0 gap-4 rounded-xl border bg-surface p-4" disabled={saving}>
+        <div className="grid min-w-0 gap-3">
+          <div className="flex gap-1 rounded-lg border bg-surface p-1" role="group" aria-label="Editor section">
+            <Button type="button" variant="ghost" size="sm" className="aria-pressed:bg-muted" aria-pressed={tab === "blocks"} onClick={() => setTab("blocks")}>Blocks</Button>
+            <Button type="button" variant="ghost" size="sm" className="aria-pressed:bg-muted" aria-pressed={tab === "appearance"} onClick={() => setTab("appearance")}>Appearance</Button>
+          </div>
+          {tab === "appearance" ? (
+            <fieldset className="grid min-w-0 gap-4 rounded-xl border bg-surface p-4" disabled={saving}>
+              <AppearanceEditor appearance={draft.appearance} onChange={(appearance) => change({ ...draft, appearance })} />
+            </fieldset>
+          ) : (
+          <fieldset className="grid min-w-0 gap-4 rounded-xl border bg-surface p-4" disabled={saving}>
           <TextField label="Page name" value={draft.name} maxLength={45} onChange={(name) => change({ ...draft, name })} />
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-semibold">Blocks</h2>
@@ -127,12 +166,20 @@ export function PageEditor({ organizationId, pageId, draft: initial, revision: i
           </ul>
           {active && <div className="grid min-w-0 gap-3 border-t pt-4">
             <h3 className="font-semibold">{blockNames[active.type]}</h3>
-            <BlockInspector key={active.id} block={active} onChange={replaceBlock} />
+            <BlockInspector key={`${active.id}:${revision}`} block={active} onChange={replaceBlock} />
           </div>}
-        </fieldset>
+          </fieldset>
+          )}
+        </div>
         <aside className="grid min-w-0 gap-3 rounded-xl border bg-surface p-3 xl:sticky xl:top-4">
-          <h2 className="px-1 text-sm font-medium">Live preview</h2>
-          <PageRenderer draft={draft} preview />
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="px-1 text-sm font-medium">Live preview</h2>
+            <div className="flex gap-1" role="group" aria-label="Preview size">
+              <Button type="button" variant="ghost" size="sm" className="aria-pressed:bg-muted" aria-label="Desktop preview" aria-pressed={!mobilePreview} onClick={() => setMobilePreview(false)}><Monitor size={16} /></Button>
+              <Button type="button" variant="ghost" size="sm" className="aria-pressed:bg-muted" aria-label="Mobile preview" aria-pressed={mobilePreview} onClick={() => setMobilePreview(true)}><Smartphone size={16} /></Button>
+            </div>
+          </div>
+          <div className={mobilePreview ? "mx-auto w-full max-w-[22rem]" : "w-full"}><PageRenderer draft={draft} preview /></div>
         </aside>
       </div>
     </section>

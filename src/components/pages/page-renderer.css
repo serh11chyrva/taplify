@@ -1,0 +1,36 @@
+.page-renderer {
+  background: var(--page-background);
+  color: var(--page-text);
+  overflow-wrap: anywhere;
+}
+
+.page-renderer .page-action {
+  border-color: color-mix(in srgb, currentColor 24%, transparent);
+}
+
+.page-renderer .page-action-accent {
+  background: var(--page-accent);
+  color: var(--page-accent-text);
+  border-color: transparent;
+}
+
+.page-renderer[data-button="outline"] .page-action-accent {
+  color: inherit;
+  background: transparent;
+  border-color: var(--page-accent);
+}
+
+.page-renderer[data-button="soft"] .page-action-accent {
+  color: inherit;
+  background: color-mix(in srgb, var(--page-accent) 18%, transparent);
+  border-color: transparent;
+}
+
+.page-prose > * + * { margin-top: 0.7rem; }
+.page-prose :is(h1, h2, h3, h4) { font-size: 1.15em; font-weight: 650; }
+.page-prose :is(ol, ul) { padding-inline-start: 1.3rem; }
+.page-prose ul { list-style: disc; }
+.page-prose ol { list-style: decimal; }
+.page-prose blockquote { border-inline-start: 2px solid currentColor; padding-inline-start: 0.75rem; }
+.page-prose pre { padding: 0.8rem; overflow-x: auto; background: rgb(128 128 128 / 12%); }
+.page-prose a { text-decoration: underline; }
