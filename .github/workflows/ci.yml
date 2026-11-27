@@ -72,3 +72,12 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
       - name: Run browser tests
         run: pnpm test:e2e ${{ matrix.spec }}
+      - name: Check configured authentication forms
+        if: matrix.analytics == 'GA4 disabled'
+        env:
+          MONGODB_URI: mongodb://127.0.0.1:27017/taplify
+          BETTER_AUTH_URL: http://127.0.0.1:3000
+          BETTER_AUTH_SECRET: auth-form-browser-tests-use-a-stub
+          GOOGLE_CLIENT_ID: test-google-client
+          GOOGLE_CLIENT_SECRET: test-google-client-secret
+        run: pnpm test:e2e tests/e2e/auth-form.spec.ts

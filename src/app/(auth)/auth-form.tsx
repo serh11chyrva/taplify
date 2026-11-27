@@ -2,19 +2,20 @@
 
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import { useId, useState, type FormEvent } from "react";
+import { useEffect, useId, useState, type FormEvent, type KeyboardEvent, type PointerEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import styles from "./auth.module.css";
 
 type AuthMethod = "email" | "google";
-type AuthError = { method: AuthMethod; message: string; field?: "confirmPassword" };
+type PasswordName = "password" | "confirmPassword";
+type AuthError = { method: AuthMethod; message: string; field?: PasswordName };
 
 const googleError = "Unable to continue with Google. Please try again.";
 const connectionError = "Unable to connect. Please try again.";
 const minPasswordLength = 8;
 const maxPasswordLength = 128;
-const passwordHint = `Use ${minPasswordLength} to ${maxPasswordLength} characters.`;
+const passwordLengthError = `Use ${minPasswordLength} to ${maxPasswordLength} characters for your password.`;
 
 function emailErrorMessage(signUp: boolean, error?: { code?: string; status: number }) {
   if (error?.status === 429) return "Too many attempts. Please wait and try again.";
@@ -25,7 +26,7 @@ function emailErrorMessage(signUp: boolean, error?: { code?: string; status: num
       return "The email or password is incorrect.";
     case "PASSWORD_TOO_SHORT":
     case "PASSWORD_TOO_LONG":
-      return passwordHint;
+      return passwordLengthError;
     case "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL":
       return "Try signing in or use a different email address.";
     default:
@@ -44,22 +45,41 @@ function AccountTerms({ id, signUp }: { id: string; signUp: boolean }) {
   );
 }
 
-function PasswordField({ id, name, label, autoComplete, disabled, minLength, hint, error, onChange }: {
+function PasswordField({
+  id, name, label, autoComplete, disabled, maxLength, error, visible,
+  revealLabel, revealedInputIds, onRevealChange, onChange,
+}: {
   id: string;
-  name: "password" | "confirmPassword";
+  name: PasswordName;
   label: string;
   autoComplete: "current-password" | "new-password";
   disabled: boolean;
-  minLength?: number;
-  hint?: string;
+  maxLength?: number;
   error?: string;
-  onChange: () => void;
+  visible: boolean;
+  revealLabel: string;
+  revealedInputIds: string;
+  onRevealChange: (field: PasswordName, reveal: boolean) => void;
+  onChange: (field: PasswordName) => void;
 }) {
-  const [visible, setVisible] = useState(false);
   const VisibilityIcon = visible ? EyeOff : Eye;
-  const fieldName = name === "confirmPassword" ? "password confirmation" : "password";
-  const description = error ?? hint;
-  const descriptionId = description ? `${id}-description` : undefined;
+  const errorId = error ? `${id}-error` : undefined;
+
+  function revealWithPointer(event: PointerEvent<HTMLButtonElement>) {
+    if (!event.isPrimary || event.button !== 0) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    onRevealChange(name, true);
+  }
+
+  function revealWithKeyboard(event: KeyboardEvent<HTMLButtonElement>) {
+    if (event.key !== " " && event.key !== "Enter") return;
+    event.preventDefault();
+    if (!event.repeat) onRevealChange(name, event.type === "keydown");
+  }
+
+  function hidePassword() {
+    onRevealChange(name, false);
+  }
 
   return (
     <div className={styles.field}>
@@ -73,26 +93,33 @@ function PasswordField({ id, name, label, autoComplete, disabled, minLength, hin
           autoComplete={autoComplete}
           autoCapitalize="none"
           spellCheck={false}
-          minLength={minLength}
-          maxLength={maxPasswordLength}
-          aria-describedby={descriptionId}
+          maxLength={maxLength}
+          aria-describedby={errorId}
           aria-invalid={error ? true : undefined}
           required
           disabled={disabled}
-          onChange={onChange}
+          onChange={() => onChange(name)}
         />
         <button
           className={styles.passwordToggle}
           type="button"
-          aria-label={`${visible ? "Hide" : "Show"} ${fieldName}`}
-          aria-controls={id}
+          aria-label={revealLabel}
+          aria-controls={revealedInputIds}
+          title={revealLabel}
           disabled={disabled}
-          onClick={() => setVisible((isVisible) => !isVisible)}
+          onPointerDown={revealWithPointer}
+          onPointerUp={hidePassword}
+          onPointerCancel={hidePassword}
+          onLostPointerCapture={hidePassword}
+          onKeyDown={revealWithKeyboard}
+          onKeyUp={revealWithKeyboard}
+          onBlur={hidePassword}
+          onContextMenu={(event) => event.preventDefault()}
         >
           <VisibilityIcon size={18} aria-hidden="true" />
         </button>
       </div>
-      {description && <p id={descriptionId} role={error ? "alert" : undefined} className={error ? styles.error : styles.note}>{description}</p>}
+      {error && <p id={errorId} role="alert" className={styles.error}>{error}</p>}
     </div>
   );
 }
@@ -105,18 +132,46 @@ export function AuthForm({ signUp, emailEnabled, googleEnabled, googleCallbackFa
 }) {
   const id = useId();
   const termsId = `${id}-terms`;
+  const passwordId = `${id}-password`;
   const confirmationId = `${id}-confirm-password`;
   const [pending, setPending] = useState<AuthMethod>();
+  const [revealedBy, setRevealedBy] = useState<PasswordName>();
   const [error, setError] = useState<AuthError | undefined>(
     googleCallbackFailed ? { method: "google", message: googleError } : undefined,
   );
   const emailAction = signUp ? "Create account" : "Sign in";
   const emailPending = signUp ? "Creating account…" : "Signing in…";
-  const confirmationError = error?.field === "confirmPassword" ? error.message : undefined;
 
-  function clearConfirmationError() {
-    if (confirmationError) setError(undefined);
+  useEffect(() => {
+    const hidePasswords = () => setRevealedBy(undefined);
+    window.addEventListener("blur", hidePasswords);
+    document.addEventListener("visibilitychange", hidePasswords);
+    return () => {
+      window.removeEventListener("blur", hidePasswords);
+      document.removeEventListener("visibilitychange", hidePasswords);
+    };
+  }, []);
+
+  function changePasswordVisibility(field: PasswordName, reveal: boolean) {
+    if (reveal) {
+      setRevealedBy(field);
+    } else {
+      setRevealedBy((current) => current === field ? undefined : current);
+    }
   }
+
+  function clearPasswordError(field: PasswordName) {
+    if (error?.field && (field === "password" || error.field === "confirmPassword")) setError(undefined);
+  }
+
+  const passwordFieldProps = {
+    visible: revealedBy !== undefined,
+    revealLabel: signUp ? "Hold to show passwords" : "Hold to show password",
+    revealedInputIds: signUp ? `${passwordId} ${confirmationId}` : passwordId,
+    onRevealChange: changePasswordVisibility,
+    onChange: clearPasswordError,
+    disabled: !emailEnabled,
+  };
 
   async function submitEmail(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -125,6 +180,11 @@ export function AuthForm({ signUp, emailEnabled, googleEnabled, googleCallbackFa
     const fields = new FormData(event.currentTarget);
     const email = String(fields.get("email") ?? "").trim();
     const password = String(fields.get("password") ?? "");
+    if (signUp && (password.length < minPasswordLength || password.length > maxPasswordLength)) {
+      setError({ method: "email", field: "password", message: passwordLengthError });
+      document.getElementById(passwordId)?.focus();
+      return;
+    }
     if (signUp && password !== fields.get("confirmPassword")) {
       setError({ method: "email", field: "confirmPassword", message: "Passwords do not match." });
       document.getElementById(confirmationId)?.focus();
@@ -176,24 +236,22 @@ export function AuthForm({ signUp, emailEnabled, googleEnabled, googleCallbackFa
           <input id={`${id}-email`} name="email" type="email" placeholder="you@example.com" autoComplete="username" required disabled={!emailEnabled} />
         </div>
         <PasswordField
-          id={`${id}-password`}
+          {...passwordFieldProps}
+          id={passwordId}
           name="password"
           label="Password"
           autoComplete={signUp ? "new-password" : "current-password"}
-          minLength={signUp ? minPasswordLength : undefined}
-          hint={signUp ? passwordHint : undefined}
-          disabled={!emailEnabled}
-          onChange={clearConfirmationError}
+          maxLength={signUp ? undefined : maxPasswordLength}
+          error={error?.field === "password" ? error.message : undefined}
         />
         {signUp && (
           <PasswordField
+            {...passwordFieldProps}
             id={confirmationId}
             name="confirmPassword"
             label="Confirm password"
             autoComplete="new-password"
-            error={confirmationError}
-            disabled={!emailEnabled}
-            onChange={clearConfirmationError}
+            error={error?.field === "confirmPassword" ? error.message : undefined}
           />
         )}
         {signUp && <AccountTerms id={termsId} signUp />}
@@ -212,7 +270,7 @@ export function AuthForm({ signUp, emailEnabled, googleEnabled, googleCallbackFa
           onClick={continueWithGoogle}
           aria-describedby={termsId}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <svg className="shrink-0" width="20" height="20" viewBox="-1 -1 26 26" fill="currentColor" aria-hidden="true">
             <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
           </svg>
           {pending === "google" ? "Connecting…" : "Continue with Google"}

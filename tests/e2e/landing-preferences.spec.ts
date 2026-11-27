@@ -19,9 +19,12 @@ test("follows the system theme and remembers an explicit theme", async ({ page }
   await expect(signUp).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(signUp).toHaveCSS("border-top-width", "1px");
   await expect(signUp).toHaveCSS("border-top-color", "rgb(162, 147, 173)");
+  await signIn.hover();
+  await expect(signIn).toHaveCSS("background-color", "rgb(234, 234, 234)");
 
   await page.emulateMedia({ colorScheme: "dark" });
   await expect(footer).toHaveCSS("background-color", "rgb(0, 0, 0)");
+  await expect(signIn).toHaveCSS("background-color", "rgb(37, 37, 37)");
   await expect(signUp).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(signUp).toHaveCSS("border-top-color", "rgb(104, 100, 113)");
 

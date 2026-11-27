@@ -123,23 +123,38 @@ test("shows the email forms and account terms on mobile", async ({ page }) => {
   const main = page.getByRole("main");
   const signIn = main.getByRole("region", { name: "Sign in" });
   const logo = main.getByRole("link", { name: "Taplify", exact: true });
+  const back = main.getByRole("link", { name: "Back to Taplify" });
   const email = main.getByLabel("Email", { exact: true });
   const password = main.getByLabel("Password", { exact: true });
   const confirmation = main.getByLabel("Confirm password", { exact: true });
   const google = main.getByRole("button", { name: "Continue with Google" });
+  const googleIcon = google.locator("svg");
   await expect(logo.locator("svg")).toBeVisible();
+  await expect(logo.locator("svg path")).toHaveCSS("shape-rendering", /geometricprecision/i);
   await expect(email).toHaveAttribute("type", "email");
   await expect(email).toHaveAttribute("placeholder", "you@example.com");
   await expect(password).toHaveAttribute("type", "password");
   await expect(password).toHaveAttribute("placeholder", "••••••••");
   await expect(password).toHaveAttribute("autocomplete", "current-password");
   await expect(confirmation).toHaveCount(0);
-  await expect(main.getByRole("button", { name: "Show password", exact: true })).toBeVisible();
+  await expect(main.getByRole("button", { name: "Hold to show password", exact: true })).toBeVisible();
   const signInAction = main.getByRole("button", { name: "Sign in", exact: true });
   await expect(signInAction).toHaveCSS("background-color", await logo.evaluate((element) => getComputedStyle(element).color));
+  await expect(signInAction).toHaveCSS("color", "rgb(255, 255, 255)");
+  await back.hover();
+  await expect(back).toHaveCSS("background-color", "rgb(234, 234, 234)");
   await expect(google).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(google).toHaveCSS("border-top-width", "1px");
-  await expect(google.locator("svg")).toHaveAttribute("fill", "currentColor");
+  await expect(googleIcon).toBeVisible();
+  await expect(googleIcon).toHaveAttribute("fill", "currentColor");
+  await expect(googleIcon.locator("path")).toHaveCSS("shape-rendering", /geometricprecision/i);
+  expect(await googleIcon.evaluate((element) => {
+    const viewBox = (element as SVGSVGElement).viewBox.baseVal;
+    const path = element.querySelector("path")?.getBBox();
+    return Boolean(path && path.x > viewBox.x && path.y > viewBox.y
+      && path.x + path.width < viewBox.x + viewBox.width
+      && path.y + path.height < viewBox.y + viewBox.height);
+  })).toBe(true);
   await expect(google).toHaveAccessibleDescription(/If you create an account with Google/);
   const [googleBounds, termsBounds] = await Promise.all([
     google.boundingBox(),
@@ -152,19 +167,22 @@ test("shows the email forms and account terms on mobile", async ({ page }) => {
 
   await page.emulateMedia({ colorScheme: "dark" });
   await expect(signIn).toHaveCSS("background-color", "rgb(24, 24, 24)");
+  await expect(signInAction).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(back).toHaveCSS("background-color", "rgb(37, 37, 37)");
   await main.getByRole("link", { name: "Sign up", exact: true }).click();
   await expect(page).toHaveURL("/sign-up");
   await expect(main.getByRole("heading", { name: "Create an account", level: 1 })).toBeVisible();
   await expect(password).toHaveAttribute("autocomplete", "new-password");
-  await expect(password).toHaveAttribute("minlength", "8");
+  await expect(main.getByText(/Use 8 to 128 characters/)).toHaveCount(0);
   await expect(confirmation).toHaveAttribute("autocomplete", "new-password");
   await expect(confirmation).toHaveAttribute("placeholder", "••••••••");
   await expect(confirmation).toHaveAttribute("required", "");
-  await expect(main.getByRole("button", { name: "Show password confirmation" })).toBeVisible();
+  await expect(main.getByRole("button", { name: "Hold to show passwords", exact: true })).toHaveCount(2);
   await expect(main.getByRole("link", { name: "Terms of Service" })).toHaveAttribute("href", "/terms-of-service");
   await expect(main.getByRole("link", { name: "Privacy Policy" })).toHaveAttribute("href", "/privacy-policy");
   const createAccount = main.getByRole("button", { name: "Create account" });
   await expect(createAccount).toHaveCSS("background-color", await logo.evaluate((element) => getComputedStyle(element).color));
+  await expect(createAccount).toHaveCSS("color", "rgb(255, 255, 255)");
   for (const action of [google, createAccount]) {
     await expect(action).toHaveAccessibleDescription(/By creating an account, you agree to the Terms of Service and acknowledge the Privacy Policy/);
   }
@@ -173,7 +191,7 @@ test("shows the email forms and account terms on mobile", async ({ page }) => {
 
   await main.getByRole("link", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL("/sign-in");
-  await main.getByRole("link", { name: "Back to Taplify" }).click();
+  await back.click();
   await expect(page).toHaveURL("/");
 });
 

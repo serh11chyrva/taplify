@@ -17,7 +17,7 @@
 }
 
 .backLink:is(:hover, :active) {
-  background: var(--muted);
+  background: var(--landing-control-hover);
 }
 
 .content {
@@ -122,10 +122,16 @@
   inline-size: 2.5rem;
   border-radius: calc(var(--radius) - 4px);
   color: var(--auth-muted);
+  touch-action: none;
+  user-select: none;
 }
 
 .passwordToggle:enabled {
   cursor: pointer;
+}
+
+.passwordToggle:enabled:is(:hover, :active) {
+  color: var(--auth-text);
 }
 
 .passwordToggle:disabled {
@@ -134,11 +140,11 @@
 
 .primaryAction {
   background: var(--landing-accent);
-  color: light-dark(#fff, #101010);
+  color: #fff;
 }
 
 .primaryAction:enabled:is(:hover, :active) {
-  background: color-mix(in srgb, var(--landing-accent) 90%, light-dark(#000, #fff));
+  background: color-mix(in srgb, var(--landing-accent) 90%, #000);
 }
 
 .googleAction {
@@ -147,10 +153,12 @@
   color: var(--auth-text);
 }
 
-.googleAction:enabled:is(:hover, :active),
-.passwordToggle:enabled:is(:hover, :active) {
+.googleAction:enabled {
+  cursor: pointer;
+}
+
+.googleAction:enabled:is(:hover, :active) {
   background: var(--auth-hover);
-  color: var(--auth-text);
 }
 
 .googleAction + .note {
