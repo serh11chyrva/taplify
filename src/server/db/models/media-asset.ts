@@ -3,6 +3,7 @@ import "reflect-metadata";
 import { getModelForClass, index, modelOptions, prop } from "@typegoose/typegoose";
 
 @index({ ownerId: 1, createdAt: -1 })
+@index({ organizationId: 1, _id: 1 })
 @modelOptions({
   options: { customName: "MediaAsset" },
   schemaOptions: { collection: "media_assets", timestamps: true, autoIndex: false, bufferCommands: false },
@@ -11,6 +12,9 @@ export class MediaAsset {
   // Better Auth IDs are strings; there is no parallel application User model.
   @prop({ type: () => String, required: true })
   public ownerId!: string;
+
+  @prop({ type: () => String })
+  public organizationId?: string;
 
   @prop({ type: () => String, required: true })
   public url!: string;

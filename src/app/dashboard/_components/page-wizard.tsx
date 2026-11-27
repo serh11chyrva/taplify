@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { organizationApiPath } from "@/lib/dashboard/organizations";
 import { pagePath, type PageSummary, type PageType } from "@/lib/dashboard/pages";
 import { dashboardRequest, jsonRequest, requestMessage } from "@/lib/dashboard/request";
+import { ImageUpload } from "./image-upload";
 
 const templates = [
   { type: "Personal", icon: UserRound, description: "A profile and links for your work." },
@@ -20,20 +21,22 @@ export function PageWizard({ organizationId }: { organizationId: string }) {
   const [type, setType] = useState<PageType>("Personal");
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
+  const [avatar, setAvatar] = useState<string>();
+  const [uploading, setUploading] = useState(false);
   const [requestId, setRequestId] = useState<string>();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (pending) return;
+    if (pending || uploading) return;
     setPending(true);
     setError("");
     const id = requestId ?? crypto.randomUUID();
     if (!requestId) setRequestId(id);
     try {
       const page = await dashboardRequest<PageSummary>(`${organizationApiPath(organizationId)}/pages`,
-        jsonRequest("POST", { name, type, bio, requestId: id }));
+        jsonRequest("POST", { name, type, bio, avatar, requestId: id }));
       router.replace(`${pagePath(organizationId, page.id)}/editor`);
       router.refresh();
     } catch (problem) {
@@ -67,10 +70,12 @@ export function PageWizard({ organizationId }: { organizationId: string }) {
               onChange={(event) => setName(event.target.value)} disabled={pending} /></label>
             <label className="grid gap-2 text-sm">Bio <span className="sr-only">(optional)</span><textarea className="dashboard-input" rows={3}
               maxLength={250} value={bio} onChange={(event) => setBio(event.target.value)} disabled={pending} /></label>
+            <fieldset disabled={pending}><ImageUpload organizationId={organizationId} label="Avatar (optional)" value={avatar}
+              onChange={setAvatar} onBusy={setUploading} /></fieldset>
             {error && <p role="alert" className="text-sm text-danger">{error}</p>}
             <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="outline" disabled={pending} onClick={() => setStep(1)}><ArrowLeft size={16} aria-hidden="true" /> Back</Button>
-              <Button type="submit" disabled={pending}>{pending ? "Creating…" : "Create draft"}</Button>
+              <Button type="button" variant="outline" disabled={pending || uploading} onClick={() => setStep(1)}><ArrowLeft size={16} aria-hidden="true" /> Back</Button>
+              <Button type="submit" disabled={pending || uploading}>{pending ? "Creating…" : "Create draft"}</Button>
             </div>
           </form>
         )}

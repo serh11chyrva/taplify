@@ -1,5 +1,5 @@
 import "server-only";
-import { put } from "@vercel/blob";
+import { del, get, put } from "@vercel/blob";
 import { z } from "zod";
 import { getBlobToken } from "@/server/env";
 
@@ -10,15 +10,21 @@ export const imageMetadataSchema = z.object({
 
 const extensions = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" } as const;
 
-// Server adapter only. An upload endpoint must authenticate the owner and verify
-// file signatures before calling this function and persisting a MediaAsset.
-export async function storeImage(ownerId: string, image: File) {
-  const owner = z.string().regex(/^[a-zA-Z0-9_-]+$/).parse(ownerId);
+export async function storeImage(organizationId: string, image: File) {
+  const organization = z.uuid().parse(organizationId);
   const metadata = imageMetadataSchema.parse(image);
-  return put(`owners/${owner}/${crypto.randomUUID()}.${extensions[metadata.type]}`, image, {
-    access: "public",
+  return put(`organizations/${organization}/${crypto.randomUUID()}.${extensions[metadata.type]}`, image, {
+    access: "private",
     contentType: metadata.type,
     token: getBlobToken(),
     addRandomSuffix: true,
   });
+}
+
+export function readImage(pathname: string) {
+  return get(pathname, { access: "private", token: getBlobToken() });
+}
+
+export function discardImage(url: string) {
+  return del(url, { token: getBlobToken() });
 }

@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { moveItem, socialNetworks, type Block } from "@/lib/dashboard/draft";
+import type { ImageDetails } from "@/lib/dashboard/media";
+import { ImageUpload } from "./image-upload";
 
 const MarkdownInspector = dynamic(() => import("./markdown-inspector"), {
   ssr: false, loading: () => <p role="status" className="text-sm text-muted-foreground">Loading Markdown editor…</p>,
@@ -63,8 +65,45 @@ export function RepeatableItems<T extends { id: string }>({ label, items, onChan
   );
 }
 
-export function BlockInspector({ block, onChange }: { block: Block; onChange: (block: Block) => void }) {
+function ImageFields({ organizationId, image, onChange, onBusy }: {
+  organizationId: string; image: ImageDetails; onChange: (image: ImageDetails) => void; onBusy: (busy: boolean) => void;
+}) {
+  return <>
+    <ImageUpload organizationId={organizationId} label="Image file" value={image.assetId} onBusy={onBusy}
+      onChange={(assetId) => onChange({ ...image, assetId })} />
+    <TextField label="Alternative text" value={image.alt} maxLength={250} onChange={(alt) => onChange({ ...image, alt })} />
+    <TextField label="Caption" value={image.caption} maxLength={250} onChange={(caption) => onChange({ ...image, caption })} />
+  </>;
+}
+
+export function BlockInspector({ block, onChange, organizationId, onBusy }: {
+  block: Block; onChange: (block: Block) => void; organizationId: string; onBusy: (busy: boolean) => void;
+}) {
   switch (block.type) {
+    case "image":
+      return <ImageFields organizationId={organizationId} image={block.image} onBusy={onBusy} onChange={(image) => onChange({ ...block, image })} />;
+    case "gallery":
+      return <>
+        <TextField label="Title" value={block.title} maxLength={120} onChange={(title) => onChange({ ...block, title })} />
+        <RepeatableItems label="Image" items={block.items} limit={15} onChange={(items) => onChange({ ...block, items })}
+          create={() => ({ id: crypto.randomUUID(), alt: "", caption: "" })}>
+          {(item, update) => <ImageFields organizationId={organizationId} image={item} onBusy={onBusy}
+            onChange={(image) => update({ ...image, id: item.id })} />}
+        </RepeatableItems>
+      </>;
+    case "portfolio":
+      return <>
+        <TextField label="Title" value={block.title} maxLength={120} onChange={(title) => onChange({ ...block, title })} />
+        <RepeatableItems label="Project" items={block.items} limit={15} onChange={(items) => onChange({ ...block, items })}
+          create={() => ({ id: crypto.randomUUID(), title: "", description: "", url: "", image: { alt: "", caption: "" } })}>
+          {(item, update) => <>
+            <TextField label="Project name" value={item.title} maxLength={120} onChange={(title) => update({ ...item, title })} />
+            <TextField label="Description" value={item.description} maxLength={2000} multiline onChange={(description) => update({ ...item, description })} />
+            <TextField label="Project URL" value={item.url} maxLength={2048} onChange={(url) => update({ ...item, url })} />
+            <ImageFields organizationId={organizationId} image={item.image} onBusy={onBusy} onChange={(image) => update({ ...item, image })} />
+          </>}
+        </RepeatableItems>
+      </>;
     case "markdown":
       return <MarkdownInspector value={block.text} onChange={(text) => onChange({ ...block, text })} />;
     case "embed":
@@ -74,6 +113,7 @@ export function BlockInspector({ block, onChange }: { block: Block; onChange: (b
       </>;
     case "profile":
       return <>
+        <ImageUpload organizationId={organizationId} label="Avatar" value={block.avatar} onBusy={onBusy} onChange={(avatar) => onChange({ ...block, avatar })} />
         <TextField label="Display name" value={block.name} maxLength={120} onChange={(name) => onChange({ ...block, name })} />
         <TextField label="Bio" value={block.bio} maxLength={250} multiline onChange={(bio) => onChange({ ...block, bio })} />
       </>;
@@ -83,6 +123,8 @@ export function BlockInspector({ block, onChange }: { block: Block; onChange: (b
         <TextField label="Description" value={block.description} maxLength={2000} multiline onChange={(description) => onChange({ ...block, description })} />
         <TextField label="Button label" value={block.actionLabel} maxLength={100} onChange={(actionLabel) => onChange({ ...block, actionLabel })} />
         <TextField label="Button destination" value={block.actionUrl} maxLength={2048} onChange={(actionUrl) => onChange({ ...block, actionUrl })} />
+        <ImageFields organizationId={organizationId} image={block.image ?? { alt: "", caption: "" }} onBusy={onBusy}
+          onChange={(image) => onChange({ ...block, image })} />
       </>;
     case "links":
       return <>

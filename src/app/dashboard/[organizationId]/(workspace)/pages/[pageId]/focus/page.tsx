@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageRenderer } from "@/components/pages/page-renderer";
 import { pagePath } from "@/lib/dashboard/pages";
+import { organizationMediaPath } from "@/lib/dashboard/media";
 import { PublicationStatus } from "@/app/dashboard/_components/page-directory";
 import { pageSummary, readDraft } from "@/server/dashboard/pages";
 import { dashboardRead, workspace } from "@/server/dashboard/read";
@@ -28,7 +29,7 @@ export default async function PageFocus({ params }: { params: Promise<{ organiza
         </div>
         {draft && <div className="grid gap-3 rounded-2xl border bg-surface p-3">
           <h2 className="text-sm font-medium">Saved preview</h2>
-          <PageRenderer draft={draft} preview />
+          <PageRenderer draft={draft} preview mediaBase={organizationMediaPath(organizationId)} />
         </div>}
       </div>
     </section>

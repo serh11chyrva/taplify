@@ -3,6 +3,7 @@ import { resourceId } from "./organizations";
 import { pageType } from "./pages";
 import { appearanceSchema, appearances } from "./appearance";
 import { embedSource } from "./embed";
+import { imageDetails, mediaId } from "./media";
 
 export const pageName = z.string().trim().min(1, "Enter a page name.").max(45);
 const bio = z.string().max(250);
@@ -24,8 +25,11 @@ export function contentLink(value: string, protocols = ["https:", "http:", "mail
 const linkUrl = z.string().trim().max(2048).refine((url) => !url || contentLink(url) !== null, "Enter a valid link.");
 const website = z.string().trim().max(2048).refine((url) => !url || (url !== "#contact" && contentLink(url, ["https:", "http:"]) !== null),
   "Enter an HTTP or HTTPS address.");
-const profileBlock = z.object({ id: resourceId, type: z.literal("profile"), name: heading, bio });
-const heroBlock = z.object({ id: resourceId, type: z.literal("hero"), heading, description, actionLabel: itemLabel, actionUrl: linkUrl });
+const profileBlock = z.object({ id: resourceId, type: z.literal("profile"), name: heading, bio, avatar: mediaId.optional() });
+const heroBlock = z.object({
+  id: resourceId, type: z.literal("hero"), heading, description, actionLabel: itemLabel, actionUrl: linkUrl,
+  image: imageDetails.optional(),
+});
 const linksBlock = z.object({
   id: resourceId, type: z.literal("links"), title: heading, layout: z.enum(["list", "grid"]),
   items: z.array(z.object({ id: resourceId, label: itemLabel, url: linkUrl })).max(25),
@@ -43,7 +47,17 @@ const embedBlock = z.object({
   url: z.string().trim().max(2048).refine((url) => !url || embedSource(url) !== null, "Enter a supported YouTube or Spotify link.")
     .transform((url) => embedSource(url)?.href ?? ""),
 });
-const block = z.discriminatedUnion("type", [profileBlock, heroBlock, linksBlock, socialBlock, markdownBlock, embedBlock]);
+const imageBlock = z.object({ id: resourceId, type: z.literal("image"), image: imageDetails });
+const galleryBlock = z.object({
+  id: resourceId, type: z.literal("gallery"), title: heading, items: z.array(imageDetails.extend({ id: resourceId })).max(15),
+});
+const portfolioBlock = z.object({
+  id: resourceId, type: z.literal("portfolio"), title: heading,
+  items: z.array(z.object({ id: resourceId, title: heading, description, url: website, image: imageDetails })).max(15),
+});
+const block = z.discriminatedUnion("type", [
+  profileBlock, heroBlock, linksBlock, socialBlock, markdownBlock, embedBlock, imageBlock, galleryBlock, portfolioBlock,
+]);
 
 export const draftSchema = z.object({
   name: pageName,
@@ -53,7 +67,7 @@ export const draftSchema = z.object({
 });
 
 export const createPageInput = z.object({
-  name: pageName, type: pageType, bio: bio.optional().default(""), requestId: resourceId,
+  name: pageName, type: pageType, bio: bio.optional().default(""), requestId: resourceId, avatar: mediaId.optional(),
 });
 export const draftInput = z.object({ expectedRevision: z.number().int().positive(), draft: draftSchema });
 
@@ -63,6 +77,7 @@ export type Block = z.infer<typeof block>;
 export const blockNames: Record<Block["type"], string> = {
   profile: "Profile", hero: "Hero", links: "Links", social: "Social links",
   markdown: "Markdown", embed: "Embed",
+  image: "Image", gallery: "Gallery", portfolio: "Portfolio",
 };
 
 export function createBlock(type: Block["type"]): Block {
@@ -74,16 +89,33 @@ export function createBlock(type: Block["type"]): Block {
     case "social": return { id, type, title: "Find me online", items: [] };
     case "markdown": return { id, type, text: "" };
     case "embed": return { id, type, title: "", url: "" };
+    case "image": return { id, type, image: { alt: "", caption: "" } };
+    case "gallery": return { id, type, title: "Gallery", items: [] };
+    case "portfolio": return { id, type, title: "Selected work", items: [] };
   }
 }
 
-export function initialDraft(name: string, type: z.infer<typeof pageType>, intro: string): PageDraft {
+export function initialDraft(name: string, type: z.infer<typeof pageType>, intro: string, avatar?: string): PageDraft {
   const lead: Block = type === "Personal"
-    ? { id: crypto.randomUUID(), type: "profile", name, bio: intro }
-    : { id: crypto.randomUUID(), type: "hero", heading: name, description: intro, actionLabel: "", actionUrl: "" };
+    ? { id: crypto.randomUUID(), type: "profile", name, bio: intro, avatar }
+    : { id: crypto.randomUUID(), type: "hero", heading: name, description: intro, actionLabel: "", actionUrl: "",
+      image: avatar ? { assetId: avatar, alt: "", caption: "" } : undefined };
   const links = createBlock("links");
   const appearance = type === "Company" ? appearances.Graphite : type === "Product" ? appearances.Ocean : appearances.Paper;
   return { name, blocks: [lead, links], appearance };
+}
+
+export function draftAssetIds(draft: PageDraft) {
+  return draft.blocks.flatMap((entry) => {
+    switch (entry.type) {
+      case "profile": return entry.avatar ? [entry.avatar] : [];
+      case "hero": return entry.image?.assetId ? [entry.image.assetId] : [];
+      case "image": return entry.image.assetId ? [entry.image.assetId] : [];
+      case "gallery": return entry.items.flatMap((item) => item.assetId ? [item.assetId] : []);
+      case "portfolio": return entry.items.flatMap((item) => item.image.assetId ? [item.image.assetId] : []);
+      default: return [];
+    }
+  });
 }
 
 export function moveItem<T>(items: T[], index: number, next: number) {

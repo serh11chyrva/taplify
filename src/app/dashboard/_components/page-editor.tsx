@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { PageRenderer } from "@/components/pages/page-renderer";
 import { blockNames, createBlock, moveItem, type Block, type PageDraft } from "@/lib/dashboard/draft";
 import { pageApiPath, pagePath } from "@/lib/dashboard/pages";
+import { organizationMediaPath } from "@/lib/dashboard/media";
 import { DashboardRequestError, dashboardRequest, jsonRequest, requestMessage } from "@/lib/dashboard/request";
 import { BlockInspector, ItemControls, TextField } from "./block-inspector";
 import { AppearanceEditor } from "./appearance-editor";
@@ -22,6 +23,7 @@ export function PageEditor({ organizationId, pageId, draft: initial, revision: i
   const [blockType, setBlockType] = useState<Block["type"]>("links");
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [feedback, setFeedback] = useState<{ message: string; error?: boolean }>();
   const [conflict, setConflict] = useState(false);
   const [tab, setTab] = useState<"blocks" | "appearance">("blocks");
@@ -63,7 +65,7 @@ export function PageEditor({ organizationId, pageId, draft: initial, revision: i
   }
 
   async function save() {
-    if (saving || !dirty) return;
+    if (saving || uploading || !dirty) return;
     setSaving(true);
     setFeedback(undefined);
     try {
@@ -84,7 +86,7 @@ export function PageEditor({ organizationId, pageId, draft: initial, revision: i
   }
 
   async function reload() {
-    if (saving || !window.confirm("Discard your unsaved changes and load the latest draft?")) return;
+    if (saving || uploading || !window.confirm("Discard your unsaved changes and load the latest draft?")) return;
     setSaving(true);
     try {
       const latest = await dashboardRequest<{ draft: PageDraft; revision: number }>(api);
@@ -106,25 +108,25 @@ export function PageEditor({ organizationId, pageId, draft: initial, revision: i
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div><h1 className="text-3xl font-semibold tracking-tight">Editor</h1><p className="mt-1 text-sm text-muted-foreground">{draft.name}</p></div>
         <div className="flex flex-wrap items-center gap-2">
-          {dirty || saving ? <Button type="button" variant="outline" disabled><Eye size={16} aria-hidden="true" /> Preview</Button> :
+          {dirty || saving || uploading ? <Button type="button" variant="outline" disabled><Eye size={16} aria-hidden="true" /> Preview</Button> :
             <Button asChild variant="outline"><Link href={`${pagePath(organizationId, pageId)}/preview`}><Eye size={16} aria-hidden="true" /> Preview</Link></Button>}
-          {conflict && <Button type="button" variant="outline" disabled={saving} onClick={() => void reload()}>Load latest draft</Button>}
-          <Button type="button" disabled={!dirty || saving} onClick={() => void save()}>{saving ? "Saving…" : "Save draft"}</Button>
+          {conflict && <Button type="button" variant="outline" disabled={saving || uploading} onClick={() => void reload()}>Load latest draft</Button>}
+          <Button type="button" disabled={!dirty || saving || uploading} onClick={() => void save()}>{saving ? "Saving…" : "Save draft"}</Button>
         </div>
       </div>
       {feedback && <p role={feedback.error ? "alert" : "status"} className={feedback.error ? "text-sm text-danger" : "text-sm text-muted-foreground"}>{feedback.message}</p>}
       <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(21rem,1fr)_minmax(20rem,1fr)]">
         <div className="grid min-w-0 gap-3">
           <div className="flex gap-1 rounded-lg border bg-surface p-1" role="group" aria-label="Editor section">
-            <Button type="button" variant="ghost" size="sm" className="aria-pressed:bg-muted" aria-pressed={tab === "blocks"} onClick={() => setTab("blocks")}>Blocks</Button>
-            <Button type="button" variant="ghost" size="sm" className="aria-pressed:bg-muted" aria-pressed={tab === "appearance"} onClick={() => setTab("appearance")}>Appearance</Button>
+            <Button type="button" variant="ghost" size="sm" className="aria-pressed:bg-muted" disabled={uploading} aria-pressed={tab === "blocks"} onClick={() => setTab("blocks")}>Blocks</Button>
+            <Button type="button" variant="ghost" size="sm" className="aria-pressed:bg-muted" disabled={uploading} aria-pressed={tab === "appearance"} onClick={() => setTab("appearance")}>Appearance</Button>
           </div>
           {tab === "appearance" ? (
             <fieldset className="grid min-w-0 gap-4 rounded-xl border bg-surface p-4" disabled={saving}>
               <AppearanceEditor appearance={draft.appearance} onChange={(appearance) => change({ ...draft, appearance })} />
             </fieldset>
           ) : (
-          <fieldset className="grid min-w-0 gap-4 rounded-xl border bg-surface p-4" disabled={saving}>
+          <fieldset className="grid min-w-0 gap-4 rounded-xl border bg-surface p-4" disabled={saving || uploading}>
           <TextField label="Page name" value={draft.name} maxLength={45} onChange={(name) => change({ ...draft, name })} />
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-semibold">Blocks</h2>
@@ -146,7 +148,7 @@ export function PageEditor({ organizationId, pageId, draft: initial, revision: i
                 onDragOver={(event) => { if (event.dataTransfer.types.includes("application/x-taplify-block")) event.preventDefault(); }}
                 onDrop={(event) => {
                   const from = draft.blocks.findIndex((item) => item.id === event.dataTransfer.getData("application/x-taplify-block"));
-                  if (from < 0 || saving) return;
+                  if (from < 0 || saving || uploading) return;
                   event.preventDefault();
                   change({ ...draft, blocks: moveItem(draft.blocks, from, index) });
                 }}>
@@ -166,7 +168,8 @@ export function PageEditor({ organizationId, pageId, draft: initial, revision: i
           </ul>
           {active && <div className="grid min-w-0 gap-3 border-t pt-4">
             <h3 className="font-semibold">{blockNames[active.type]}</h3>
-            <BlockInspector key={`${active.id}:${revision}`} block={active} onChange={replaceBlock} />
+            <BlockInspector key={`${active.id}:${revision}`} block={active} onChange={replaceBlock}
+              organizationId={organizationId} onBusy={setUploading} />
           </div>}
           </fieldset>
           )}
@@ -179,7 +182,7 @@ export function PageEditor({ organizationId, pageId, draft: initial, revision: i
               <Button type="button" variant="ghost" size="sm" className="aria-pressed:bg-muted" aria-label="Mobile preview" aria-pressed={mobilePreview} onClick={() => setMobilePreview(true)}><Smartphone size={16} /></Button>
             </div>
           </div>
-          <div className={mobilePreview ? "mx-auto w-full max-w-[22rem]" : "w-full"}><PageRenderer draft={draft} preview /></div>
+          <div className={mobilePreview ? "mx-auto w-full max-w-[22rem]" : "w-full"}><PageRenderer draft={draft} preview mediaBase={organizationMediaPath(organizationId)} /></div>
         </aside>
       </div>
     </section>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageRenderer } from "@/components/pages/page-renderer";
 import { pagePath } from "@/lib/dashboard/pages";
+import { organizationMediaPath } from "@/lib/dashboard/media";
 import { readDraft } from "@/server/dashboard/pages";
 import { dashboardRead, workspace } from "@/server/dashboard/read";
 
@@ -15,7 +16,7 @@ export default async function SavedPreview({ params }: { params: Promise<{ organ
         <p className="truncate text-sm text-muted-foreground">Draft preview · {draft.name}</p>
         <Button asChild variant="outline" size="sm"><Link href={`${pagePath(organizationId, pageId)}/editor`}>Back to editor</Link></Button>
       </header>
-      <PageRenderer draft={draft} preview />
+      <PageRenderer draft={draft} preview mediaBase={organizationMediaPath(organizationId)} />
     </main>
   );
 }
