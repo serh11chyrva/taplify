@@ -28,6 +28,12 @@ try {
   await db.collection("page_events").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
   await db.collection("public_rate_limits").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
   await db.collection("lead_columns").createIndex({ organizationId: 1, pageId: 1, userId: 1 }, { unique: true });
+  await db.collection("organization_invitations").createIndex({ organizationId: 1, requestId: 1 }, { unique: true });
+  await db.collection("organization_invitations").createIndex(
+    { organizationId: 1, email: 1 }, { unique: true, partialFilterExpression: { state: "pending" } },
+  );
+  await db.collection("organization_invitations").createIndex({ organizationId: 1, createdAt: -1 });
+  await db.collection("organization_invitations").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 7 * 86400 });
   console.log("Application indexes created");
 } catch {
   console.error("Index creation failed. Check database access and existing indexes.");

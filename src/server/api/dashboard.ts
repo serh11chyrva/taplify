@@ -17,6 +17,7 @@ import { privateImage, uploadImage } from "@/server/dashboard/media";
 import { archivePage, publishPage, restorePage, unpublishPage } from "@/server/dashboard/publication";
 import { listLeads, readLead, removeLead, updateLead } from "@/server/dashboard/leads";
 import { leadColumns, leadExport, setLeadColumns } from "@/server/dashboard/lead-columns";
+import { createInvitation, listInvitations, revokeInvitation } from "@/server/dashboard/invitations";
 
 type DashboardApi = { Variables: { userId: string } };
 
@@ -76,6 +77,15 @@ dashboardApi.post("/:organizationId/select", async (c) => {
   selectOrganization(c, organization.id);
   return c.json(organization);
 });
+dashboardApi.get("/:organizationId/invitations", async (c) => c.json(await listInvitations(
+  c.get("userId"), c.req.param("organizationId"),
+)));
+dashboardApi.post("/:organizationId/invitations", async (c) => c.json(await createInvitation(
+  c.get("userId"), c.req.param("organizationId"), c.req.raw, await jsonBody(c.req.raw),
+), 201));
+dashboardApi.post("/:organizationId/invitations/:invitationId/revoke", async (c) => c.json(await revokeInvitation(
+  c.get("userId"), c.req.param("organizationId"), c.req.param("invitationId"),
+)));
 dashboardApi.get("/:organizationId/analytics", async (c) => c.json(await loadAnalytics(
   c.get("userId"), c.req.param("organizationId"), reportRange(c.req.query()),
 )));
