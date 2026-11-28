@@ -121,4 +121,4 @@ jobs:
         env:
           NODE_OPTIONS: --import=./tests/e2e/mock-resend.mjs
           TAPLIFY_TEST_MAILBOX: ${{ runner.temp }}/taplify-emails.jsonl
-        run: pnpm test:e2e tests/e2e/dashboard-workflow.spec.ts
+        run: pnpm test:e2e tests/e2e/dashboard-workflow.spec.ts --workers=1
