@@ -185,36 +185,49 @@ test("collects consented views across pages and stops after withdrawal", async (
     const endpoint = (slug: string) => `/api/public/pages/${slug}/events`;
     const syntheticView = (slug: string) => {
       const id = randomUUID();
-      return guest.request.post(endpoint(slug), { data: { type: "view", eventId: id, pageViewId: id, publicationVersion: 1 } });
+      return guest.request.post(endpoint(slug), { timeout: 8000, data: { type: "view", eventId: id, pageViewId: id, publicationVersion: 1 } });
     };
-    await visitor.goto(`/p/${slugs[0]}?utm_source=Newsletter`);
-    expect(await (await syntheticView(slugs[0])).json()).toEqual({ recorded: false });
-    const consent = visitor.waitForResponse((response) => response.url().endsWith("/api/public/pages/consent"), { timeout: 10000 });
-    const first = visitor.waitForResponse((response) => response.url().endsWith(endpoint(slugs[0])), { timeout: 15000 });
-    await visitor.getByRole("button", { name: "Allow page analytics", exact: true }).click();
-    const consentResult = await consent;
-    expect(await consentResult.json()).toEqual({ granted: true });
-    expect((await guest.cookies()).some((cookie) => cookie.name === "taplify_page_analytics")).toBe(true);
-    const viewed = await first;
-    expect(await viewed.json()).toEqual({ recorded: true });
-    expect((await guest.request.post(endpoint(slugs[0]), { data: viewed.request().postDataJSON() })).status()).toBe(200);
-
-    const second = visitor.waitForResponse((response) => response.url().endsWith(endpoint(slugs[1])), { timeout: 15000 });
-    await visitor.goto(`/p/${slugs[1]}`);
-    expect((await second).status()).toBe(200);
-    await visitor.getByRole("button", { name: "Page analytics settings" }).click();
-    await visitor.getByRole("button", { name: "Decline page analytics", exact: true }).click();
-    await expect(visitor.getByRole("dialog", { name: "Page analytics settings" })).not.toBeVisible();
-    expect(await (await syntheticView(slugs[1])).json()).toEqual({ recorded: false });
-    const result = await context.request.get(`${api}/analytics?range=7`);
-    expect(result.status()).toBe(200);
-    expect(await result.json()).toMatchObject({
-      report: { totals: { views: 2, uniqueVisitors: 1 }, campaigns: [{ label: "Newsletter", count: 1 }] },
+    await test.step("Decline measurement until consent is granted", async () => {
+      const opened = await visitor.goto(`/p/${slugs[0]}?utm_source=Newsletter`, { waitUntil: "domcontentloaded", timeout: 10000 });
+      expect(opened?.status()).toBe(200);
+      expect(await (await syntheticView(slugs[0])).json()).toEqual({ recorded: false });
     });
-    await dashboard.goto(`/dashboard/${organizationId}/analytics?range=7`);
-    await expect(dashboard.getByRole("heading", { name: "Organization analytics" })).toBeVisible();
+    await test.step("Grant consent and record the first view", async () => {
+      const allow = visitor.getByRole("complementary", { name: "Page analytics" }).getByRole("button", { name: "Allow page analytics", exact: true });
+      await expect(allow).toBeVisible();
+      const [consentResult, viewed] = await Promise.all([
+        visitor.waitForResponse((response) => response.url().endsWith("/api/public/pages/consent"), { timeout: 10000 }),
+        visitor.waitForResponse((response) => response.url().endsWith(endpoint(slugs[0])), { timeout: 12000 }),
+        allow.click({ timeout: 8000 }),
+      ]);
+      expect(await consentResult.json()).toEqual({ granted: true });
+      expect((await guest.cookies()).some((cookie) => cookie.name === "taplify_page_analytics")).toBe(true);
+      expect(await viewed.json()).toEqual({ recorded: true });
+      expect((await guest.request.post(endpoint(slugs[0]), { data: viewed.request().postDataJSON(), timeout: 8000 })).status()).toBe(200);
+    });
+    await test.step("Record the second view and withdraw consent", async () => {
+      const [second] = await Promise.all([
+        visitor.waitForResponse((response) => response.url().endsWith(endpoint(slugs[1])), { timeout: 12000 }),
+        visitor.goto(`/p/${slugs[1]}`, { waitUntil: "domcontentloaded", timeout: 10000 }),
+      ]);
+      expect(await second.json()).toEqual({ recorded: true });
+      await visitor.getByRole("button", { name: "Page analytics settings", exact: true }).click({ timeout: 8000 });
+      const settings = visitor.getByRole("dialog", { name: "Page analytics settings" });
+      await settings.getByRole("button", { name: "Decline page analytics", exact: true }).click({ timeout: 8000 });
+      await expect(settings).not.toBeVisible();
+      expect(await (await syntheticView(slugs[1])).json()).toEqual({ recorded: false });
+    });
+    await test.step("Verify the organization report", async () => {
+      const result = await context.request.get(`${api}/analytics?range=7`, { timeout: 8000 });
+      expect(result.status()).toBe(200);
+      expect(await result.json()).toMatchObject({
+        report: { totals: { views: 2, uniqueVisitors: 1 }, campaigns: [{ label: "Newsletter", count: 1 }] },
+      });
+      await dashboard.goto(`/dashboard/${organizationId}/analytics?range=7`, { waitUntil: "domcontentloaded", timeout: 10000 });
+      await expect(dashboard.getByRole("heading", { name: "Organization analytics" })).toBeVisible();
+    });
   } finally {
-    await guest.close();
+    await guest.close().catch(() => {});
   }
 });
 
