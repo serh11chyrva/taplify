@@ -169,8 +169,8 @@ test("collects consented views across pages and stops after withdrawal", async (
   const { organizationId, page: dashboard } = await register(context);
   const api = `/api/organizations/${organizationId}`;
   const slugs = [`traffic-one-${randomUUID()}`, `traffic-two-${randomUUID()}`];
-  for (const slug of slugs) {
-    const draft = await context.request.post(`${api}/pages`, { data: { name: slug, type: "Personal", requestId: randomUUID() } });
+  for (const [index, slug] of slugs.entries()) {
+    const draft = await context.request.post(`${api}/pages`, { data: { name: `Traffic page ${index + 1}`, type: "Personal", requestId: randomUUID() } });
     expect(draft.status()).toBe(201);
     const { id } = await draft.json();
     expect((await context.request.post(`${api}/pages/${id}/publish`, { data: { expectedRevision: 1, slug } })).status()).toBe(200);

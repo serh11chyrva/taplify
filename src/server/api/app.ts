@@ -14,6 +14,7 @@ export const app = new Hono().basePath("/api");
 
 app.use("*", requestId(), secureHeaders());
 app.get("/health", (c) => c.json(getHealth()));
+app.post("/auth/send-verification-email", (c) => c.json({ error: { code: "NOT_FOUND", message: "Endpoint not found." } }, 404));
 app.on(["GET", "POST"], "/auth/*", async (c) => {
   if (!isAuthConfigured()) {
     return c.json({ error: { code: "AUTH_NOT_CONFIGURED", message: "Authentication is not configured." } }, 503);
