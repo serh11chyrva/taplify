@@ -16,6 +16,7 @@ async function createAuth() {
     baseURL: env.BETTER_AUTH_URL,
     secret: env.BETTER_AUTH_SECRET,
     database: mongodbAdapter(client.db(getDatabaseEnv().MONGODB_DB_NAME), { client }),
+    advanced: process.env.VERCEL === "1" ? { ipAddress: { ipAddressHeaders: ["x-vercel-forwarded-for"] } } : undefined,
     socialProviders: google ? {
       google: { clientId: google.GOOGLE_CLIENT_ID, clientSecret: google.GOOGLE_CLIENT_SECRET },
     } : {},

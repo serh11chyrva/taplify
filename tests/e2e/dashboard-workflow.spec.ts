@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import { MongoClient } from "mongodb";
 import { expect, test, type BrowserContext } from "@playwright/test";
 import { createBlock } from "../../src/lib/dashboard/draft";
 
@@ -9,9 +11,10 @@ const password = "dashboard-test-only-password";
 
 async function register(context: BrowserContext) {
   const id = randomUUID();
+  const email = `dashboard-${id}@example.test`;
   const signUp = () => context.request.post(`${origin}/api/auth/sign-up/email`, {
     headers: { origin },
-    data: { email: `dashboard-${id}@example.test`, password, name: "Dashboard QA" },
+    data: { email, password, name: "Dashboard QA" },
   });
   let response = await signUp();
   if (response.status() === 429) {
@@ -23,7 +26,7 @@ async function register(context: BrowserContext) {
   const page = await context.newPage();
   await page.goto(`${origin}/dashboard`);
   await expect(page).toHaveURL(/\/dashboard\/[a-f0-9-]+$/);
-  return { page, organizationId: new URL(page.url()).pathname.split("/")[2] };
+  return { page, email, organizationId: new URL(page.url()).pathname.split("/")[2] };
 }
 
 test("creates, publishes, archives, and restores a page", async ({ context, browser }) => {
@@ -207,5 +210,102 @@ test("collects consented views across pages and stops after withdrawal", async (
     await expect(dashboard.getByRole("heading", { name: "Organization analytics" })).toBeVisible();
   } finally {
     await guest.close();
+  }
+});
+
+async function mailLink(email: string, subject: string): Promise<string> {
+  const mailbox = process.env.TAPLIFY_TEST_MAILBOX;
+  if (!mailbox) throw new Error("The dashboard test mailbox is unavailable.");
+  let link: string | undefined;
+  await expect.poll(async () => {
+    const messages = (await readFile(mailbox, "utf8").catch(() => "")).split("\n").filter(Boolean)
+      .map((line) => JSON.parse(line) as { to: string[]; subject: string; text: string });
+    const message = messages.reverse().find((item) => item.to.includes(email) && item.subject.includes(subject));
+    link = message?.text.match(/https?:\/\/[^\s]+/)?.[0];
+    return Boolean(link);
+  }).toBe(true);
+  if (!link) throw new Error("The expected email was not captured.");
+  return link;
+}
+
+test("verifies invitation recipients, enforces roles, and revokes access", async ({ context, browser }) => {
+  test.skip(process.env.ORGANIZATION_INVITATIONS_ENABLED !== "true" || !process.env.TAPLIFY_TEST_MAILBOX, "Requires the test mail transport");
+  test.setTimeout(90000);
+  await register(context);
+  const created = await context.request.post("/api/organizations", { data: { name: "Dashboard team" } });
+  expect(created.status(), await created.text()).toBe(201);
+  const { id: organizationId } = await created.json();
+  const base = `/api/organizations/${organizationId}`;
+  const draft = await context.request.post(`${base}/pages`, {
+    data: { name: "Team page", type: "Personal", requestId: randomUUID() },
+  });
+  expect(draft.status()).toBe(201);
+  const { id: pageId } = await draft.json();
+  const pageEndpoint = `${base}/pages/${pageId}`;
+  const editor = await browser.newContext({ baseURL: origin });
+  const operator = await browser.newContext({ baseURL: origin });
+  try {
+    const editing = await register(editor);
+    const operating = await register(operator);
+    async function invite(email: string, role: "editor" | "operator") {
+      const response = await context.request.post(`${base}/invitations`, { data: { email, role, requestId: randomUUID() } });
+      expect(response.status(), await response.text()).toBe(201);
+      return (await response.json()).id as string;
+    }
+    const editorId = await invite(editing.email, "editor");
+    const editorEndpoint = `/api/organization-invitations/${editorId}`;
+    expect((await operator.request.post(`${editorEndpoint}/accept`)).status()).toBe(404);
+    expect((await editor.request.post(`${editorEndpoint}/accept`)).status()).toBe(403);
+
+    const outdated = await invite(operating.email, "operator");
+    const database = process.env.MONGODB_URI;
+    if (!database?.startsWith("mongodb://127.0.0.1:27017/taplify_dashboard_test?")) throw new Error("Expected an isolated dashboard database.");
+    const mongo = await new MongoClient(database).connect();
+    try {
+      await mongo.db("taplify_dashboard_test").collection<{ _id: string; expiresAt: Date }>("organization_invitations")
+        .updateOne({ _id: outdated }, { $set: { expiresAt: new Date(Date.now() - 1000) } });
+    } finally {
+      await mongo.close();
+    }
+    await operating.page.goto(`/dashboard/invitations/${outdated}`);
+    await expect(operating.page.getByText("This invitation expired.")).toBeVisible();
+    const revoked = await invite(operating.email, "operator");
+    expect((await context.request.post(`${base}/invitations/${revoked}/revoke`)).status()).toBe(200);
+    await operating.page.goto(`/dashboard/invitations/${revoked}`);
+    await expect(operating.page.getByText("This invitation was revoked.")).toBeVisible();
+    const operatorId = await invite(operating.email, "operator");
+
+    for (const [recipient, id] of [[editing, editorId], [operating, operatorId]] as const) {
+      const inviteUrl = await mailLink(recipient.email, "invited");
+      expect(new URL(inviteUrl).pathname).toBe(`/dashboard/invitations/${id}`);
+      await recipient.page.goto(inviteUrl);
+      await recipient.page.getByRole("button", { name: "Send verification email" }).click();
+      await expect(recipient.page.getByText("Open the link in your verification email")).toBeVisible();
+      await recipient.page.goto(await mailLink(recipient.email, "Verify"));
+      await recipient.page.getByRole("button", { name: "Accept invitation" }).click();
+      await expect(recipient.page).toHaveURL(`${origin}/dashboard/${organizationId}`);
+    }
+
+    expect((await editor.request.get(pageEndpoint)).status()).toBe(200);
+    expect((await editor.request.post(`${pageEndpoint}/publish`, { data: { expectedRevision: 1, slug: "editor-publish" } })).status()).toBe(403);
+    expect((await editor.request.get(`${pageEndpoint}/leads`)).status()).toBe(403);
+    expect((await operator.request.get(`${pageEndpoint}/leads`)).status()).toBe(200);
+    expect((await operator.request.get(`${base}/analytics`)).status()).toBe(200);
+    expect((await operator.request.get(`${pageEndpoint}/leads/export`)).status()).toBe(403);
+    expect((await operator.request.get(pageEndpoint)).status()).toBe(403);
+    expect((await editor.request.post(`${editorEndpoint}/accept`)).status()).toBe(200);
+
+    const members = await (await context.request.get(`${base}/members`)).json() as { id: string; email: string }[];
+    const membership = members.find((member) => member.email === editing.email);
+    expect(membership).toBeDefined();
+    expect((await context.request.patch(`${base}/members/${membership?.id}`, { data: { role: "operator" } })).status()).toBe(200);
+    expect((await editor.request.get(pageEndpoint)).status()).toBe(403);
+    expect((await editor.request.get(`${base}/analytics`)).status()).toBe(200);
+    expect((await context.request.delete(`${base}/members/${membership?.id}`)).status()).toBe(200);
+    expect((await editor.request.get(`${base}/analytics`)).status()).toBe(404);
+    expect((await editor.request.post(`${editorEndpoint}/accept`)).status()).toBe(409);
+  } finally {
+    await editor.close();
+    await operator.close();
   }
 });

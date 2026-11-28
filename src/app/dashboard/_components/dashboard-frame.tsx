@@ -2,7 +2,7 @@
 
 import { useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { ChartNoAxesColumnIncreasing, ChevronRight, CircleUserRound, Files, LayoutDashboard, Menu, PanelLeftClose, PanelLeftOpen, Settings2, X } from "lucide-react";
 import { TaplifyIcon } from "@/app/_landing/taplify-icon";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,6 @@ export function DashboardFrame({ organization, organizations, account, projects,
   analytics: boolean;
   children: ReactNode;
 }) {
-  const router = useRouter();
   const pathname = usePathname();
   const mobileMenu = useRef<HTMLDialogElement>(null);
   const [collapsed, setCollapsed] = useState(false);
@@ -42,8 +41,7 @@ export function DashboardFrame({ organization, organizations, account, projects,
     try {
       await dashboardRequest(`${organizationApiPath(nextId)}/select`, { method: "POST" });
       mobileMenu.current?.close();
-      router.push(organizationPath(nextId));
-      router.refresh();
+      window.location.assign(organizationPath(nextId));
     } catch (problem) {
       setError(requestMessage(problem));
     } finally {

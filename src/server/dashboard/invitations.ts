@@ -4,12 +4,16 @@ import { inviteInput, invitationPath, roleLabels, type OrganizationInvitation } 
 import { resourceId } from "@/lib/dashboard/organizations";
 import { connectMongoose } from "@/server/db/mongoose";
 import { getInvitationModel, type InvitationRecord } from "@/server/db/models/organization-invitation";
+import { getMembershipModel, getOrganizationModel } from "@/server/db/models/organization";
 import { getAuthEnv } from "@/server/env";
 import { DashboardError, isDuplicateKey, missingResource, validate } from "./errors";
 import { dashboardFeatures } from "./features";
 import { mailConfigured, sendTransactionalMail } from "./mail";
 import { requireOrganization } from "./organizations";
 import { limitPublicRequest } from "./rate-limit";
+import { requestOwnVerification } from "./verify-email";
+
+type Recipient = { id: string; email: string; emailVerified: boolean };
 
 function invitationDto(record: InvitationRecord, now = new Date()): OrganizationInvitation {
   return {
@@ -101,4 +105,63 @@ export async function revokeInvitation(userId: string, organizationId: string, i
     if (record.state === "accepted") throw new DashboardError(409, "INVITATION_ACCEPTED", "This person already joined. Manage their access in Members.");
   }
   return { revoked: true };
+}
+
+async function invitationForRecipient(user: Recipient, invitationId: string) {
+  requireInvitationRelease();
+  if (!dashboardFeatures().dashboard || !resourceId.safeParse(invitationId).success) throw missingResource();
+  await connectMongoose();
+  const record = await getInvitationModel().findOne({ _id: invitationId, email: user.email.trim().toLowerCase() }).lean();
+  if (!record || (record.state === "accepted" && record.acceptedBy !== user.id)) throw missingResource();
+  return record;
+}
+
+export async function recipientInvitation(user: Recipient, invitationId: string) {
+  const record = await invitationForRecipient(user, invitationId);
+  const organization = await getOrganizationModel().findById(record.organizationId).select("name personalOwnerId").lean();
+  if (!organization || organization.personalOwnerId) throw missingResource();
+  let { state } = invitationDto(record);
+  if (state === "accepted" && !await getMembershipModel().exists({ organizationId: record.organizationId, userId: user.id })) {
+    state = "revoked";
+  }
+  return { organizationId: record.organizationId, organizationName: organization.name, state, role: record.role };
+}
+
+function unavailableInvitation() {
+  return new DashboardError(409, "INVITATION_UNAVAILABLE", "This invitation expired or was revoked.");
+}
+
+export async function verifyInvitationEmail(user: Recipient, invitationId: string, request: Request) {
+  const record = await invitationForRecipient(user, invitationId);
+  if (record.state !== "pending" || record.expiresAt <= new Date()) throw unavailableInvitation();
+  if (user.emailVerified) return { requested: false };
+  await limitPublicRequest(request, "invitation-verification", user.id, 3);
+  return requestOwnVerification(request.headers, user.email, invitationPath(invitationId));
+}
+
+export async function acceptInvitation(user: Recipient, invitationId: string) {
+  const record = await invitationForRecipient(user, invitationId);
+  if (!user.emailVerified) {
+    throw new DashboardError(403, "EMAIL_NOT_VERIFIED", "Verify your email before accepting the invitation.");
+  }
+  const { organizationId, email } = record;
+  const membership = { organizationId, userId: user.id };
+  const mongoose = await connectMongoose();
+  await mongoose.connection.transaction(async (session) => {
+    const invitations = getInvitationModel();
+    const members = getMembershipModel();
+    const claim = await invitations.findOneAndUpdate(
+      { _id: invitationId, organizationId, email, state: "pending", expiresAt: { $gt: new Date() } },
+      { $set: { state: "accepted", acceptedBy: user.id } },
+      { session, returnDocument: "after" },
+    ).lean();
+    if (!claim) {
+      const accepted = await invitations.exists({ _id: invitationId, state: "accepted", acceptedBy: user.id }).session(session);
+      const member = await members.exists(membership).session(session);
+      if (accepted && member) return;
+      throw unavailableInvitation();
+    }
+    await members.updateOne(membership, { $setOnInsert: { ...membership, role: claim.role } }, { upsert: true, session });
+  });
+  return { organizationId };
 }

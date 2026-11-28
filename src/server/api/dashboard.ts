@@ -1,5 +1,5 @@
 import "server-only";
-import { Hono, type Context } from "hono";
+import { Hono, type Context, type Env } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { setCookie } from "hono/cookie";
 import { lastOrganizationCookie } from "@/lib/dashboard/organizations";
@@ -18,6 +18,7 @@ import { archivePage, publishPage, restorePage, unpublishPage } from "@/server/d
 import { listLeads, readLead, removeLead, updateLead } from "@/server/dashboard/leads";
 import { leadColumns, leadExport, setLeadColumns } from "@/server/dashboard/lead-columns";
 import { createInvitation, listInvitations, revokeInvitation } from "@/server/dashboard/invitations";
+import { listMembers, removeMember, setMemberRole } from "@/server/dashboard/members";
 
 type DashboardApi = { Variables: { userId: string } };
 
@@ -56,7 +57,7 @@ dashboardApi.use("*", bodyLimit({ maxSize: 2 * 1024 * 1024 + 65536, onError: () 
   throw new DashboardError(422, "REQUEST_TOO_LARGE", "The request is too large.");
 } }));
 
-function selectOrganization(c: Context<DashboardApi>, organizationId: string) {
+export function selectOrganization<E extends Env>(c: Context<E>, organizationId: string) {
   setCookie(c, lastOrganizationCookie, organizationId, {
     path: "/dashboard", httpOnly: true, sameSite: "Lax",
     secure: new URL(c.req.url).protocol === "https:", maxAge: 180 * 86400,
@@ -85,6 +86,15 @@ dashboardApi.post("/:organizationId/invitations", async (c) => c.json(await crea
 ), 201));
 dashboardApi.post("/:organizationId/invitations/:invitationId/revoke", async (c) => c.json(await revokeInvitation(
   c.get("userId"), c.req.param("organizationId"), c.req.param("invitationId"),
+)));
+dashboardApi.get("/:organizationId/members", async (c) => c.json(await listMembers(
+  c.get("userId"), c.req.param("organizationId"),
+)));
+dashboardApi.patch("/:organizationId/members/:memberId", async (c) => c.json(await setMemberRole(
+  c.get("userId"), c.req.param("organizationId"), c.req.param("memberId"), await jsonBody(c.req.raw),
+)));
+dashboardApi.delete("/:organizationId/members/:memberId", async (c) => c.json(await removeMember(
+  c.get("userId"), c.req.param("organizationId"), c.req.param("memberId"),
 )));
 dashboardApi.get("/:organizationId/analytics", async (c) => c.json(await loadAnalytics(
   c.get("userId"), c.req.param("organizationId"), reportRange(c.req.query()),

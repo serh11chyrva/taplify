@@ -2,7 +2,7 @@
 
 A small SaaS for public link pages, portfolios, contact forms, leads, and analytics.
 
-Taplify includes email and Google authentication, an organization-scoped dashboard, a page editor, draft previews, and publishing. The app uses Next.js, Hono, MongoDB, Typegoose, and Vercel Blob. Taplify can use Google Analytics to measure visits to the platform with visitor consent.
+Taplify includes email and Google authentication, an organization dashboard, a page editor, publishing, contact forms, a lead inbox, analytics, and team invitations. The app uses Next.js, Hono, MongoDB, Typegoose, and Vercel Blob. Platform analytics uses Google Analytics with visitor consent.
 
 ## Local development
 
@@ -33,6 +33,9 @@ Open [localhost:3000](http://localhost:3000). The landing page and health endpoi
 | `PAGE_FORMS_ENABLED` | Enables the contact form builder, public submissions, and the page lead inbox. |
 | `PAGE_ANALYTICS_ENABLED` | Enables public page analytics and organization and page reports. |
 | `PAGE_ANALYTICS_SECRET` | Independent random secret of at least 32 characters for page analytics cookies and organization-scoped visitor identifiers. |
+| `ORGANIZATION_INVITATIONS_ENABLED` | Enables issuing and accepting organization invitations and verifying recipient email addresses. |
+| `RESEND_API_KEY` | Server-only key used for transactional email. |
+| `TAPLIFY_MAIL_FROM` | Sender address on a verified Resend domain. Accepts a display name and address. |
 | `PUBLIC_SITE_ORIGIN` | Canonical origin for published links. Defaults to the authentication origin. |
 | `BLOB_READ_WRITE_TOKEN` | Token for a private Vercel Blob store, required for page images. |
 
@@ -127,7 +130,7 @@ pnpm db:check
 pnpm db:indexes
 ```
 
-Mongoose automatic index creation is disabled. `db:indexes` creates application indexes for organization membership, page creation and slug uniqueness, and media. The script applies additive changes. Better Auth manages its own indexes through its adapter.
+Mongoose automatic index creation is disabled. `db:indexes` creates application indexes for organizations, pages, media, leads, analytics, and invitations. The script applies additive changes. Better Auth manages its own indexes through its adapter.
 
 ## Dashboard rollout
 
@@ -137,7 +140,13 @@ Enable `PAGE_FORMS_ENABLED` after applying the lead, receipt, and event indexes.
 
 Set `PAGE_ANALYTICS_SECRET` and enable `PAGE_ANALYTICS_ENABLED` after applying the event and expiration indexes. Page analytics has an independent consent choice. Report dates use UTC, and unique visitors are consenting browsers deduplicated across the pages of one organization. The identifier expires after 90 days, and event records expire after 90 days. Submissions count whether the visitor allows analytics or not.
 
-The Dashboard workflow in CI runs its browser checks against an isolated MongoDB replica set. It uses real email sign-in and tests publication, archive behavior, concurrent draft saves, organization isolation, and replay-safe forms with filtered CSV.
+For collaboration, verify the sender domain in Resend, disable provider open and click tracking for transactional mail, and set `RESEND_API_KEY` and `TAPLIFY_MAIL_FROM` in the target environment. Enable `ORGANIZATION_INVITATIONS_ENABLED` after applying the invitation indexes. On Preview, create a shared organization, send test invitations to both roles, complete email verification and acceptance, and revoke a test membership. Invite links use the origin in `BETTER_AUTH_URL`.
+
+Owners manage access and publishing. Editors create and edit page drafts and media. Operators review and triage leads and read reports. Personal organizations are private to their owners. Invitations expire after seven days and require the invited and verified email address. Send again revokes the earlier link and issues a fresh invitation.
+
+For rollback, turn off the affected feature flag and redeploy. Disabling forms pauses new submissions. Disabling analytics pauses event collection and reports. Disabling invitations pauses issuing and accepting links while the server continues checking current memberships. Use the returned error code and Vercel request ID to trace delivery or data failures.
+
+The Dashboard workflow in CI runs against an isolated MongoDB replica set. It covers email sign-in, publishing, concurrent saves, forms, filtered CSV, analytics consent, invitation verification, and revocation. The test process intercepts Resend and writes messages to its temporary fixture so no external mail is sent.
 
 ## Vercel
 

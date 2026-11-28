@@ -25,8 +25,7 @@ export function WorkspaceSettings({ organization }: { organization: Organization
         router.refresh();
       } else {
         const created = await dashboardRequest<OrganizationSummary>("/api/organizations", jsonRequest("POST", { name }));
-        router.push(organizationPath(created.id));
-        router.refresh();
+        window.location.assign(organizationPath(created.id));
       }
     } catch (error) {
       setFeedback({ message: requestMessage(error), error: true });

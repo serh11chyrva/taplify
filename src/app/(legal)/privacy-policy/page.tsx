@@ -36,6 +36,15 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section>
+        <h2>Organization invitations</h2>
+        <p>
+          Organization owners enter an email address to invite a teammate. Taplify uses Resend to send
+          invitation and email verification messages. The invitation records the requested role and expires
+          after seven days.
+        </p>
+      </section>
+
+      <section>
         <h2>Sessions and cookies</h2>
         <p>
           Taplify uses cookies to protect the sign-in process and keep you signed in. Session

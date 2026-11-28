@@ -9,6 +9,7 @@ import { getHealth } from "@/server/services/health";
 import { DashboardError } from "@/server/dashboard/errors";
 import { dashboardApi } from "./dashboard";
 import { publicPagesApi } from "./public-pages";
+import { invitationApi } from "./invitation-recipient";
 
 export const app = new Hono().basePath("/api");
 
@@ -24,6 +25,7 @@ app.on(["GET", "POST"], "/auth/*", async (c) => {
 });
 app.route("/", dashboardApi);
 app.route("/", publicPagesApi);
+app.route("/", invitationApi);
 
 app.notFound((c) => c.json({ error: { code: "NOT_FOUND", message: "Endpoint not found." } }, 404));
 app.onError((error, c) => {

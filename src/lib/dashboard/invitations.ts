@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { resourceId } from "./organizations";
+import { resourceId, type OrganizationRole } from "./organizations";
 
 export const teamRole = z.enum(["editor", "operator"]);
 export type TeamRole = z.infer<typeof teamRole>;
@@ -18,6 +18,8 @@ export type OrganizationInvitation = {
   delivery: "pending" | "sent" | "failed";
   expiresAt: string;
 };
+
+export type OrganizationMember = { id: string; role: OrganizationRole; name: string; email: string };
 
 export function invitationPath(invitationId: string) {
   return `/dashboard/invitations/${invitationId}`;
